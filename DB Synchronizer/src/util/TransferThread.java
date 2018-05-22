@@ -112,8 +112,8 @@ public class TransferThread extends Thread {
 
 			srcSQL.append(
 					" from " + Constans.srcDBInfo.getTableName() + " where " + Constans.condition_column + " = ?");
-			// logger.info("srcSQL=" + srcSQL.toString());
-			// logger.info("destSQL=" + destSQL.toString());
+			 logger.info("srcSQL=" + srcSQL.toString());
+			 logger.info("destSQL=" + destSQL.toString());
 
 			PreparedStatement srcPS = srcDAO.prepareStatement(srcSQL.toString());
 			PreparedStatement destPS = destDAO.prepareStatement(destSQL.toString());
@@ -123,6 +123,7 @@ public class TransferThread extends Thread {
 			boolean updateSQLFinished = false;
 			int srcCount = 0, destCount = 0;
 			SimpleDateFormat srcSF = new SimpleDateFormat("yyyyMMddHHmmss");
+			logger.info("allTransfer size="+allTransfer.size());
 			while (srcRS.next()) {
 				srcCount++;
 				int index = 1;
@@ -187,6 +188,8 @@ public class TransferThread extends Thread {
 					else if (transferBean.getSrcColumn() == null && transferBean.getDestColumn() != null
 							&& transferBean.getDestContent() != null && !"".equals(transferBean.getDestContent())) {
 						destPS.setString(index++, transferBean.getDestContent());
+					}else {
+						logger.info(transferBean.getSrcColumn());
 					}
 					if (!updateSQLFinished) {
 						if (transferBean.getSrcColumn() != null && !"".equals(transferBean.getSrcColumn())

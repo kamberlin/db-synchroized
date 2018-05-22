@@ -86,9 +86,10 @@ public class MainFrame extends JFrame {
 				db_panel.setDefaultText();
 				db_panel.disableAll();
 				if(tabbedPane.getSelectedIndex()==0) {
-					db_panel.enterPassword(db_panel);
+					db_panel.checkPassword(db_panel);
 				}else if(tabbedPane.getSelectedIndex()==1) {
 					column_panel.init();
+					column_panel.changeTab();
 				}else if(tabbedPane.getSelectedIndex()==2) {
 					timeSettingPanel.init();
 				}
@@ -104,7 +105,7 @@ public class MainFrame extends JFrame {
 			@Override
 			public void componentResized(ComponentEvent e) {
 				if(!db_panel.isLoad) {
-					db_panel.enterPassword(db_panel);
+					db_panel.checkPassword(db_panel);
 				}
 			}
 			

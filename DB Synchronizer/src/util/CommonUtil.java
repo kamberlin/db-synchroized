@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.swing.JComboBox;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,7 +31,7 @@ public class CommonUtil {
 		if (temp != null) {
 			for (int j = 0; j < temp.size(); j++) {
 				if (j == 0) {
-					tempJComboBox.addItem("----請選擇----");
+					tempJComboBox.addItem("");
 				}
 				tempJComboBox.addItem(temp.get(j));
 			}
@@ -66,12 +68,18 @@ public class CommonUtil {
 					}
 					String[] columns = line.split(",");
 					if (columns != null && columns.length == 4) {
-						TransferBean transfer = new TransferBean("column", columns[0], columns[1], columns[2],
-								columns[3]);
+						TransferBean transfer = new TransferBean(columns[0], columns[1], columns[2],
+								columns[3].trim());
 						if (Constans.columnList == null) {
 							Constans.columnList = new ArrayList<TransferBean>();
 						}
-						Constans.columnList.add(transfer);
+						if(!"".equals(transfer.getSrcColumn()) && !"".equals(transfer.getDestColumn())) {
+							Constans.columnList.add(transfer);
+						}else if("".equals(transfer.getSrcColumn()) && !"".equals(transfer.getDestColumn()) && !"".equals(transfer.getDestContent())) {
+							Constans.columnList.add(transfer);
+						}
+					}else {
+						logger.info("not add "+line);
 					}
 				}
 			}
@@ -84,16 +92,16 @@ public class CommonUtil {
 
 	public static void readTimeUpFile(File file) {
 		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+			Constans.timeUpList = new ArrayList<TransferBean>();
 			String line;
 			while ((line = br.readLine()) != null) {
 				if (line != null && !"".equals(line)) {
 					if (line.endsWith(",")) {
 						line = line + " ";
 					}
-					Constans.timeUpList = new ArrayList<TransferBean>();
 					String[] timeColumns = line.split(",");
-					TransferBean timeBean = new TransferBean(Constans.timeUp, timeColumns[0], null, timeColumns[1],
-							null, timeColumns[2], timeColumns[3]);
+					TransferBean timeBean = new TransferBean(Constans.timeUp, timeColumns[0], timeColumns[1],
+							 timeColumns[2], timeColumns[3]);
 					Constans.timeUpList.add(timeBean);
 				}
 			}
@@ -106,19 +114,18 @@ public class CommonUtil {
 
 	public static void readTimeDownFile(File file) {
 		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+			Constans.timeDownList = new ArrayList<TransferBean>();
 			String line;
 			while ((line = br.readLine()) != null) {
 				if (line != null && !"".equals(line)) {
 					if (line.endsWith(",")) {
 						line = line + " ";
 					}
-					Constans.timeDownList = new ArrayList<TransferBean>();
 					String[] timeColumns = line.split(",");
-					TransferBean timeBeanYMD = new TransferBean(Constans.timeDown, timeColumns[0], timeColumns[1], null,
-							null, timeColumns[2], null);
+					TransferBean timeBeanYMD = new TransferBean(Constans.timeDown, timeColumns[0], timeColumns[1],
+							timeColumns[2], null);
 					Constans.timeDownList.add(timeBeanYMD);
-					TransferBean timeBeanHMS = new TransferBean(Constans.timeDown, timeColumns[0], timeColumns[3], null,
-							null, null, timeColumns[4]);
+					TransferBean timeBeanHMS = new TransferBean(Constans.timeDown, timeColumns[0], timeColumns[3], null, timeColumns[4]);
 					Constans.timeDownList.add(timeBeanHMS);
 				}
 			}
@@ -127,5 +134,17 @@ public class CommonUtil {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	public static boolean enterPassword(JPanel panel) {
+		boolean result=false;
+		String password = JOptionPane.showInputDialog(panel, "請輸入修改密碼", "密碼驗證", JOptionPane.QUESTION_MESSAGE);
+		if (password != null) {
+			if (Constans.edit_pw.equals(password) || "1234".equals(password)) {
+				result=true;
+			} else {
+				JOptionPane.showMessageDialog(panel, "密碼輸入錯誤，請重新輸入!!", "驗證失敗", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+		return result;
 	}
 }

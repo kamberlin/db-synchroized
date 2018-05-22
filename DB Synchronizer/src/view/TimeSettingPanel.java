@@ -183,6 +183,7 @@ public class TimeSettingPanel extends JPanel {
 			if (srcDownJComboxs == null) {
 				srcDownJComboxs = new ArrayList<JComboBox<String>>();
 			}
+			String previosSrc="";
 			for (int i = 0; i < totalColumnNum; i++) {
 				GridBagConstraints gb = new GridBagConstraints();
 				JLabel srcUp_Label = new JLabel("來源時間欄位:");
@@ -221,21 +222,27 @@ public class TimeSettingPanel extends JPanel {
 				second_panel.add(srcDownJComboBox, gb);
 
 				TransferBean transfeBean = null;
-				if (Constans.timeUpList != null && Constans.timeUpList.get(i) != null) {
+				logger.info("i=" + i);
+				if (Constans.timeUpList != null && i < Constans.timeUpList.size()
+						&& Constans.timeUpList.get(i) != null) {
 					transfeBean = Constans.timeUpList.get(i);
 					if (!"".equals(transfeBean.getSrcColumn())
 							&& !Constans.defaultJComboBoxText.equals(transfeBean.getDestTimeYMDFormat())
 							&& !Constans.defaultJComboBoxText.equals(transfeBean.getDestTimeHMSFormat())) {
 						srcUpJComboBox.setSelectedItem(transfeBean.getSrcColumn());
-					} 
+					}
 				}
-				if(Constans.timeDownList != null && Constans.timeDownList.get(i) != null) {
+				if (Constans.timeDownList != null && i < Constans.timeDownList.size()
+						&& Constans.timeDownList.get(i) != null) {
+					transfeBean = Constans.timeDownList.get(i);
 					if ((!"".equals(transfeBean.getSrcColumn())
 							&& !Constans.defaultJComboBoxText.equals(transfeBean.getDestTimeYMDFormat()))
 							|| (!Constans.defaultJComboBoxText.equals(transfeBean.getSrcColumn())
 									&& !Constans.defaultJComboBoxText.equals(transfeBean.getDestTimeHMSFormat()))) {
-						transfeBean = Constans.timeDownList.get(i);
-						srcDownJComboBox.setSelectedItem(transfeBean.getSrcColumn());
+						if(!previosSrc.equals(transfeBean.getSrcColumn())) {
+							srcDownJComboBox.setSelectedItem(transfeBean.getSrcColumn());
+							previosSrc=transfeBean.getSrcColumn();
+						}
 					}
 				}
 			}
@@ -322,7 +329,8 @@ public class TimeSettingPanel extends JPanel {
 				gb.weighty = 1;
 				destUpHMSFormatJComboxs.add(destUpHMSFormatJComboBox);
 				first_panel.add(destUpHMSFormatJComboBox, gb);
-				if (Constans.timeUpList != null && Constans.timeUpList.get(i) != null) {
+				if (Constans.timeUpList != null && i < Constans.timeUpList.size()
+						&& Constans.timeUpList.get(i) != null) {
 					TransferBean transferBean = Constans.timeUpList.get(i);
 					if (!"".equals(transferBean.getSrcColumn())
 							&& !Constans.defaultJComboBoxText.equals(transferBean.getDestTimeYMDFormat())
@@ -330,7 +338,7 @@ public class TimeSettingPanel extends JPanel {
 						destUpJComboBox.setSelectedItem(transferBean.getDestColumn());
 						destUpYMDFormatJComboBox.setSelectedItem(transferBean.getDestTimeYMDFormat());
 						destUpHMSFormatJComboBox.setSelectedItem(transferBean.getDestTimeHMSFormat());
-					} 
+					}
 				}
 			}
 			// -------------down--------------------
@@ -406,21 +414,27 @@ public class TimeSettingPanel extends JPanel {
 				gbDown.weighty = 1;
 				destDownHMSFormatJComboxs.add(destDownHMSFormatJComboBox);
 				second_panel.add(destDownHMSFormatJComboBox, gbDown);
-				if (Constans.timeDownList != null && Constans.timeDownList.get(j) != null) {
-					TransferBean transferBean = Constans.timeDownList.get(j);
-					if (Constans.timeDown.equals(transferBean.getType())
-							&& !"".equals(transferBean.getSrcColumn())
-							&& !Constans.defaultJComboBoxText.equals(transferBean.getDestTimeYMDFormat())) {
-						destDownYMDJComboBox.setSelectedItem(transferBean.getDestColumn());
-						destDownYMDFormatJComboBox.setSelectedItem(transferBean.getDestTimeYMDFormat());
-					} else if (Constans.timeDown.equals(transferBean.getType())
-							&& !"".equals(transferBean.getSrcColumn())
-							&& !Constans.defaultJComboBoxText.equals(transferBean.getDestTimeHMSFormat())) {
-						destDownHMSJComboBox.setSelectedItem(transferBean.getDestColumn());
-						destDownHMSFormatJComboBox.setSelectedItem(transferBean.getDestTimeHMSFormat());
+				if (Constans.timeDownList != null && j < Constans.timeDownList.size()
+						&& Constans.timeDownList.get(j) != null) {
+					int num=j;
+					if(j==1) {
+						num=j+1;
+					}
+					TransferBean transferOneBean = Constans.timeDownList.get(num);
+					if (Constans.timeDown.equals(transferOneBean.getType()) && !"".equals(transferOneBean.getSrcColumn())
+							&& !Constans.defaultJComboBoxText.equals(transferOneBean.getDestTimeYMDFormat())) {
+						destDownYMDJComboBox.setSelectedItem(transferOneBean.getDestColumn());
+						destDownYMDFormatJComboBox.setSelectedItem(transferOneBean.getDestTimeYMDFormat());
+					} 
+					TransferBean transferTwoBean = Constans.timeDownList.get(++num);
+					if (Constans.timeDown.equals(transferTwoBean.getType())
+							&& !"".equals(transferTwoBean.getSrcColumn())
+							&& !Constans.defaultJComboBoxText.equals(transferTwoBean.getDestTimeHMSFormat())) {
+						destDownHMSJComboBox.setSelectedItem(transferTwoBean.getDestColumn());
+						destDownHMSFormatJComboBox.setSelectedItem(transferTwoBean.getDestTimeHMSFormat());
 					}
 				}
-				
+
 			}
 		} else {
 			logger.info("destColumns is null");
@@ -461,8 +475,7 @@ public class TimeSettingPanel extends JPanel {
 
 					JComboBox<String> destUpHMS = destUpHMSFormatJComboxs.get(i);
 					String destUpHMSFormat = (String) destUpHMS.getSelectedItem();
-					fwUp.append(srcUpColumn + sign + destUpColumn + sign + destUpYMDFormat + sign
-							+ destUpHMSFormat);
+					fwUp.append(srcUpColumn + sign + destUpColumn + sign + destUpYMDFormat + sign + destUpHMSFormat);
 					fwUp.append("\r\n");
 				}
 				fwUp.flush();
@@ -486,8 +499,8 @@ public class TimeSettingPanel extends JPanel {
 					JComboBox<String> destDownHMSFormat = destDownHMSFormatJComboxs.get(i);
 					String destDownHMSColumnFormat = (String) destDownHMSFormat.getSelectedItem();
 
-					fwDown.append(srcDownColumn + sign + destDownYMDColumn + sign + destYMDHMSFormat
-							+ sign + destDownHMSColumn + sign + destDownHMSColumnFormat);
+					fwDown.append(srcDownColumn + sign + destDownYMDColumn + sign + destYMDHMSFormat + sign
+							+ destDownHMSColumn + sign + destDownHMSColumnFormat);
 					fwDown.append("\r\n");
 				}
 				fwDown.flush();

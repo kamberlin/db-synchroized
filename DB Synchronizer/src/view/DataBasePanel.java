@@ -27,6 +27,7 @@ import org.apache.logging.log4j.Logger;
 
 import bean.DestDBInfo;
 import bean.SrcDBInfo;
+import util.CommonUtil;
 import util.Constans;
 import util.DBUtil;
 import util.SystemConfigUtil;
@@ -378,16 +379,12 @@ public class DataBasePanel extends JPanel {
 		return result;
 	}
 
-	public void enterPassword(JPanel panel) {
+	public void checkPassword(JPanel panel) {
 		reload(dbFile);
 		setDefaultText();
-		String password = JOptionPane.showInputDialog(panel, "請輸入修改密碼", "密碼驗證", JOptionPane.QUESTION_MESSAGE);
-		if (password != null) {
-			if (Constans.edit_pw.equals(password) || "1234".equals(password)) {
-				enableAll();
-			} else {
-				JOptionPane.showMessageDialog(panel, "密碼輸入錯誤，請重新輸入!!", "驗證失敗", JOptionPane.ERROR_MESSAGE);
-			}
+		boolean result=CommonUtil.enterPassword(panel);
+		if(result) {
+			enableAll();
 		}
 		if (!isLoad) {
 			isLoad = true;

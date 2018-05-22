@@ -10,22 +10,20 @@ public class TransferBean {
 	String destTimeHMSFormat;
 	
 	
-	public TransferBean(String type, String srcColumn, String destColumn, String srcContent, String destContent) {
+	public TransferBean(String srcColumn, String srcContent,String destColumn, String destContent) {
 		super();
-		this.type = type;
+		this.type = "column";
 		this.srcColumn = srcColumn;
 		this.destColumn = destColumn;
 		this.srcContent = srcContent;
 		this.destContent = destContent;
 	}
-	public TransferBean(String type, String srcColumn, String destColumn, String srcContent, String destContent,
+	public TransferBean(String type, String srcColumn, String destColumn,
 			String destTimeYMDFormat, String destTimeHMSFormat) {
 		super();
 		this.type = type;
 		this.srcColumn = srcColumn;
 		this.destColumn = destColumn;
-		this.srcContent = srcContent;
-		this.destContent = destContent;
 		this.destTimeYMDFormat = destTimeYMDFormat;
 		this.destTimeHMSFormat = destTimeHMSFormat;
 	}

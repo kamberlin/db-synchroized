@@ -9,7 +9,6 @@ import javax.swing.border.TitledBorder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import bean.TransferBean;
 import util.CommonUtil;
 import util.Constans;
 import util.DBUtil;
@@ -21,8 +20,6 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -302,7 +299,6 @@ public class ColumnSettingPanel extends JPanel {
 
 	public void genDestColumn() {
 		if (Constans.destColumns != null) {
-			logger.info("destColumns is not null size=" + Constans.destColumns.size());
 			for (int i = 0; i < columnLength; i++) {
 				if (destJComboxs == null) {
 					destJComboxs = new ArrayList<JComboBox<String>>();
@@ -393,19 +389,44 @@ public class ColumnSettingPanel extends JPanel {
 					if (destTextField != null) {
 						destText = destTextField.getText();
 					}
-					/*
-					if ((!"".equals(srcColumn) && !"".equals(destColumn))
-							|| (!"".equals(destColumn) && destText != null && !"".equals(destText))) {
-
-					}
-					*/
-					fw.append(srcColumn + sign + srcText + sign + destColumn + sign + destText + sign);
+					fw.append(srcColumn + sign + srcText + sign + destColumn + sign + destText);
 					fw.append("\r\n");
 				}
 				fw.flush();
 				fw.close();
 			} catch (Exception e) {
 				e.printStackTrace();
+			}
+		}
+	}
+	public void changeTab() {
+		if(CommonUtil.enterPassword(this)) {
+			enableAll();
+		}
+	}
+	public void enableAll() {
+		if(srcJComboxs!=null) {
+			for(int i=0;i<srcJComboxs.size();i++) {
+				JComboBox<String> tempJCombo = srcJComboxs.get(i);
+				tempJCombo.setEnabled(true);
+			}
+		}
+		if(destJComboxs!=null) {
+			for(int i=0;i<destJComboxs.size();i++) {
+				JComboBox<String> tempJCombo = destJComboxs.get(i);
+				tempJCombo.setEnabled(true);
+			}
+		}
+		if(srcJTextField!=null) {
+			for(int i=0;i<srcJTextField.size();i++) {
+				JTextField tempField = srcJTextField.get(i);
+				tempField.setEditable(true);
+			}
+		}		
+		if(destJTextField!=null) {
+			for(int i=0;i<destJTextField.size();i++) {
+				JTextField tempField = destJTextField.get(i);
+				tempField.setEditable(true);
 			}
 		}
 	}
