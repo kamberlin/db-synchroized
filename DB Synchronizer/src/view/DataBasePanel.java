@@ -3,7 +3,6 @@ package view;
 import javax.swing.JPanel;
 
 import java.awt.Dimension;
-import java.awt.GridBagConstraints;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -76,7 +75,6 @@ public class DataBasePanel extends JPanel {
 	public DataBasePanel() {
 		setLayout(new GridLayout(4, 1, 0, 0));
 		allTexts = new ArrayList<JTextField>();
-		GridBagConstraints gridBagConst = new GridBagConstraints();
 		JPanel up_panel = new JPanel();
 		up_panel.setLayout(new GridLayout(1, 2, 10, 10));
 		add(up_panel);
@@ -255,11 +253,6 @@ public class DataBasePanel extends JPanel {
 				} else {
 					JOptionPane.showMessageDialog(up_panel, "資料庫連線失敗，請檢查設定！！", "資料庫連線測試", JOptionPane.ERROR_MESSAGE);
 				}
-				/*
-				System.out.println("dest_db_type=" + dest_db_type + ",dest_ip=" + dest_ip + " ,dest_account="
-						+ dest_account + " ,dest_pw=" + dest_pw + " ,dest_database=" + dest_database + " ,dest_table="
-						+ dest_table);
-						*/
 			}
 		});
 		dbinfo_dest_panel.add(dest_btn);
@@ -328,7 +321,7 @@ public class DataBasePanel extends JPanel {
 
 	public void init() {
 		try {
-			if (checkClassPathPropertiesExist(Constans.mainproperty)) {
+			if(checkClassPathPropertiesExist(Constans.mainproperty)) {
 				systemConfigUtil = new SystemConfigUtil(Constans.mainproperty);
 				Constans.dbproperty = systemConfigUtil.get("db.folder");
 				Constans.logproperty = systemConfigUtil.get("log.folder");
@@ -352,7 +345,7 @@ public class DataBasePanel extends JPanel {
 				logger.info(Constans.mainproperty + " is not exist");
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("DataBasePanel error",e);
 		}
 	}
 
@@ -360,13 +353,13 @@ public class DataBasePanel extends JPanel {
 		boolean result = false;
 		try {
 			URL url = this.getClass().getClassLoader().getResource(propertyName);
-			if (url != null) {
+			if (url!=null && url.toURI()!=null && url.toURI().getPath() != null) {
 				String filePath = url.toURI().getPath();
 				File tempFile = new File(filePath);
 				result = tempFile.exists();
 			}
 		} catch (URISyntaxException e) {
-			e.printStackTrace();
+			logger.error("DataBasePanel error",e);
 		}
 		return result;
 	}
@@ -454,19 +447,23 @@ public class DataBasePanel extends JPanel {
 	}
 	public void reload(File dbFile) {
 		try {
-			SystemConfigUtil dbConfig;
-			dbConfig = new SystemConfigUtil(dbFile);
-			Constans.srcDBInfo = new SrcDBInfo(dbConfig.get("src.type"), dbConfig.get("src.ip"),
-					dbConfig.get("src.username"), dbConfig.get("src.password"), dbConfig.get("src.dbname"),
-					dbConfig.get("src.tablename"));
-			Constans.destDBInfo = new DestDBInfo(dbConfig.get("dest.type"), dbConfig.get("dest.ip"),
-					dbConfig.get("dest.username"), dbConfig.get("dest.password"),
-					dbConfig.get("dest.dbname"), dbConfig.get("dest.tablename"));
-			Constans.sequence_s=dbConfig.get("sequence");
-			Constans.condition=dbConfig.get("condition");
-			Constans.condition_column=dbConfig.get("condition_column");
+			File decodeDBFile=new File(dbFile.getParent()+File.separator+CommonUtil.getFileNameWithOutExtension(dbFile)+"_decode.txt");
+			if(dbFile.exists()) {
+				CommonUtil.decrypt(dbFile.getPath(), Constans.edit_pw);
+				SystemConfigUtil dbConfig = new SystemConfigUtil(decodeDBFile);
+				decodeDBFile.delete();
+				Constans.srcDBInfo = new SrcDBInfo(dbConfig.get("src.type"), dbConfig.get("src.ip"),
+						dbConfig.get("src.username"), dbConfig.get("src.password"), dbConfig.get("src.dbname"),
+						dbConfig.get("src.tablename"));
+				Constans.destDBInfo = new DestDBInfo(dbConfig.get("dest.type"), dbConfig.get("dest.ip"),
+						dbConfig.get("dest.username"), dbConfig.get("dest.password"),
+						dbConfig.get("dest.dbname"), dbConfig.get("dest.tablename"));
+				Constans.sequence_s=dbConfig.get("sequence");
+				Constans.condition=dbConfig.get("condition");
+				Constans.condition_column=dbConfig.get("condition_column");
+			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("DataBasePanel error",e);
 		}
 	}
 	public void readColumn(File columnFile) {
@@ -488,13 +485,13 @@ public class DataBasePanel extends JPanel {
 			    }
 		    }
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			logger.error("DataBasePanel error",e);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("DataBasePanel error",e);
 		}
 	}
-	public void askSave(JPanel jpanel) {
-		int answer=JOptionPane.showConfirmDialog(jpanel, "尚未儲存設定，是否需要儲存", "儲存設定", JOptionPane.YES_NO_OPTION);
+	public void askSave() {
+		int answer=JOptionPane.showConfirmDialog(this, "尚未儲存設定，是否需要儲存", "儲存設定", JOptionPane.YES_NO_OPTION);
 		if(answer==JOptionPane.YES_OPTION) {
 			save();
 		}

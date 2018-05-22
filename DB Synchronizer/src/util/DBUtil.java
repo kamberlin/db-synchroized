@@ -53,7 +53,7 @@ public class DBUtil {
 			}
 		} catch (Exception e1) {
 			if (!(e1.getMessage() != null && (e1.getMessage().indexOf("無法連線") > -1))) {
-				e1.printStackTrace();
+				logger.error("DBUtil error",e1);
 			} else {
 				logger.error(e1.getMessage());
 			}
@@ -73,7 +73,7 @@ public class DBUtil {
 			}
 		} catch (Exception e1) {
 			if (!(e1.getMessage() != null && (e1.getMessage().indexOf("無法連線") > -1))) {
-				e1.printStackTrace();
+				logger.error("DBUtil error",e1);
 			} else {
 				logger.error(e1.getMessage());
 			}
@@ -95,13 +95,13 @@ public class DBUtil {
 			}
 		} catch (Exception e1) {
 			if (!("無法連線".indexOf(e1.getMessage()) > -1)) {
-				e1.printStackTrace();
+				logger.error("DBUtil error",e1);
 			}
 		}
 		return isConnected;
 	}
 
-	public static void getDestColumnDetail() {
+	public static void getDestColumnsFromDB() {
 		if (Constans.destDBInfo != null) {
 			try {
 				DAOSQL daoSQL = getDBConnection(Constans.destDBInfo);
@@ -123,11 +123,11 @@ public class DBUtil {
 				daoSQL.close();
 			}
 			catch(SQLException se) {
-				se.printStackTrace();
+				logger.error("DBUtil error",se);
 				logger.info("errorcode="+se.getErrorCode());
 			}
 			catch (Exception e) {
-				e.printStackTrace();
+				logger.error("DBUtil error",e);
 			}
 		}
 	}

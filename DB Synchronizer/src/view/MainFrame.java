@@ -37,7 +37,7 @@ public class MainFrame extends JFrame {
 					MainFrame frame = new MainFrame();
 					frame.setVisible(true);
 				} catch (Exception e) {
-					e.printStackTrace();
+					logger.info("MainFrame error",e);
 				}
 			}
 		});
@@ -81,17 +81,24 @@ public class MainFrame extends JFrame {
 				ColumnSettingPanel column_panel=(ColumnSettingPanel) tabbedPane.getComponentAt(1);
 				TimeSettingPanel timeSettingPanel=(TimeSettingPanel)tabbedPane.getComponentAt(2);
 				if(db_panel.isEdit) {
-					db_panel.askSave(db_panel);
+					db_panel.askSave();
+				}
+				if(column_panel.isEdit) {
+					column_panel.askSave();
+				}
+				if(timeSettingPanel.isEdit) {
+					timeSettingPanel.askSave();
 				}
 				db_panel.setDefaultText();
 				db_panel.disableAll();
 				if(tabbedPane.getSelectedIndex()==0) {
 					db_panel.checkPassword(db_panel);
 				}else if(tabbedPane.getSelectedIndex()==1) {
-					column_panel.init();
-					column_panel.changeTab();
+					column_panel.loadAllData();
+					column_panel.checkPassword();
 				}else if(tabbedPane.getSelectedIndex()==2) {
-					timeSettingPanel.init();
+					timeSettingPanel.loadAllData();
+					timeSettingPanel.checkPassword();
 				}
 			}
 		});

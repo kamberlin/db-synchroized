@@ -57,6 +57,7 @@ public class DAOSQL {
 				conn = null;
 			}
 		} catch (SQLException sqlError) {
+			logger.error("DAOSQL error",sqlError);
 		}
 	}
 
@@ -79,6 +80,7 @@ public class DAOSQL {
 				conn = null;
 			}
 		} catch (SQLException sqlError) {
+			logger.error("DAOSQL error",sqlError);
 		}
 	}
 
@@ -162,7 +164,7 @@ public class DAOSQL {
 				isClosed=true;
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.error("DAOSQL error",e);
 		}
 		return isClosed;
 	}

@@ -9,7 +9,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import bean.TransferBean;
-import bean.TransferBean;
 import util.CommonUtil;
 import util.Constans;
 import util.DBUtil;
@@ -37,7 +36,7 @@ public class TimeSettingPanel extends JPanel {
 
 	private static Logger logger = LogManager.getLogger(TimeSettingPanel.class);
 	boolean isLoad = false;
-
+	boolean isEdit = false;
 	ArrayList<JComboBox<String>> srcUpJComboxs = null;
 	ArrayList<JComboBox<String>> srcDownJComboxs = null;
 
@@ -78,8 +77,6 @@ public class TimeSettingPanel extends JPanel {
 	public TimeSettingPanel() {
 
 		GridBagLayout outter_layout = new GridBagLayout();
-		// outter_layout.rowWeights = new double[] { 0.0, 1.0 };
-		// outter_layout.columnWeights = new double[] { 1.0, 0.0 };
 		setLayout(outter_layout);
 
 		first_panel = new JPanel();
@@ -122,6 +119,7 @@ public class TimeSettingPanel extends JPanel {
 		gbl_btn_layout = new GridBagLayout();
 		btn_panel.setLayout(gbl_btn_layout);
 		edit_Btn = new JButton("修改設定");
+		edit_Btn.setFont(textFont);
 		btn_panel.add(edit_Btn);
 		GridBagConstraints gbThird = new GridBagConstraints();
 		gbThird.gridx = 0;
@@ -141,36 +139,66 @@ public class TimeSettingPanel extends JPanel {
 
 	}
 
-	public void init() {
-		getDestColumns(first_panel);
+	public void loadData() {
+		// 讀取存檔
+		loadDataFromFile();
+		// 產生來源下拉選單
+		genSrcColumn();
+		// 產生目標下拉選單
+		genDestColumn();
+		// 設定所有欄位為不可編輯
+		disableAll();
+	}
+
+	public void loadAllData() {
+		// 讀取存檔
+		loadDataFromFile();
+		// 產生來源下拉選單
+		genSrcColumn();
+		// 連線資料庫取得目標欄位
+		getDestColumnsFromDB();
+		// 產生目標下拉選單
+		genDestColumn();
+		// 設定所有欄位為不可編輯
+		disableAll();
+	}
+
+	public void loadDataFromFile() {
 		try {
 			SystemConfigUtil systemConfigUtil = new SystemConfigUtil(Constans.mainproperty);
 			String timeUp_folder = systemConfigUtil.get("timeUp.folder");
 			String timeDown_folder = systemConfigUtil.get("timeDown.folder");
+			//加密檔案
 			File timeUp_file = new File(timeUp_folder);
 			File timeDown_file = new File(timeDown_folder);
-			if (timeUp_file.exists()) {
-				CommonUtil.readTimeUpFile(timeUp_file);
+			//解密暫存檔
+			File timeUpDecode = new File(timeUp_file.getParent() + File.separator+CommonUtil.getFileNameWithOutExtension(timeUp_file) + "_decode.txt");
+			File timeDownDecode = new File(timeDown_file.getParent() + File.separator+CommonUtil.getFileNameWithOutExtension(timeDown_file) + "_decode.txt");
+			CommonUtil.decrypt(timeUp_file.getPath(), Constans.edit_pw);
+			CommonUtil.decrypt(timeDown_file.getPath(), Constans.edit_pw);
+			if (timeUpDecode.exists()) {
+				CommonUtil.readTimeUpFile(timeUpDecode);
+				timeUpDecode.delete();
 			}
-			if (timeDown_file.exists()) {
-				CommonUtil.readTimeDownFile(timeDown_file);
+			if (timeDownDecode.exists()) {
+				CommonUtil.readTimeDownFile(timeDownDecode);
+				timeDownDecode.delete();
 			}
-		} catch (Exception e) {
 
+		} catch (Exception e) {
+			logger.error("error",e);
 		}
-		genSrcColumn();
-		genDestColumn();
 	}
 
-	public boolean getDestColumns(JPanel jpanel) {
+	public boolean getDestColumnsFromDB() {
 		boolean result = false;
 		if (DBUtil.checkAllNotEmpty(Constans.destDBInfo)) {
-			DBUtil.getDestColumnDetail();
+			DBUtil.getDestColumnsFromDB();
 			if (Constans.destColumns == null || Constans.destColumns.size() == 0) {
-				JOptionPane.showMessageDialog(jpanel, "目標資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(this, "目標資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
 			}
 		} else {
-			JOptionPane.showMessageDialog(jpanel, "目標資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, "目標資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
 		}
 		return result;
 	}
@@ -183,7 +211,7 @@ public class TimeSettingPanel extends JPanel {
 			if (srcDownJComboxs == null) {
 				srcDownJComboxs = new ArrayList<JComboBox<String>>();
 			}
-			String previosSrc="";
+			String previosSrc = "";
 			for (int i = 0; i < totalColumnNum; i++) {
 				GridBagConstraints gb = new GridBagConstraints();
 				JLabel srcUp_Label = new JLabel("來源時間欄位:");
@@ -222,7 +250,6 @@ public class TimeSettingPanel extends JPanel {
 				second_panel.add(srcDownJComboBox, gb);
 
 				TransferBean transfeBean = null;
-				logger.info("i=" + i);
 				if (Constans.timeUpList != null && i < Constans.timeUpList.size()
 						&& Constans.timeUpList.get(i) != null) {
 					transfeBean = Constans.timeUpList.get(i);
@@ -239,9 +266,9 @@ public class TimeSettingPanel extends JPanel {
 							&& !Constans.defaultJComboBoxText.equals(transfeBean.getDestTimeYMDFormat()))
 							|| (!Constans.defaultJComboBoxText.equals(transfeBean.getSrcColumn())
 									&& !Constans.defaultJComboBoxText.equals(transfeBean.getDestTimeHMSFormat()))) {
-						if(!previosSrc.equals(transfeBean.getSrcColumn())) {
+						if (!previosSrc.equals(transfeBean.getSrcColumn())) {
 							srcDownJComboBox.setSelectedItem(transfeBean.getSrcColumn());
-							previosSrc=transfeBean.getSrcColumn();
+							previosSrc = transfeBean.getSrcColumn();
 						}
 					}
 				}
@@ -328,7 +355,6 @@ public class TimeSettingPanel extends JPanel {
 				gb.weightx = 0.1;
 				gb.weighty = 1;
 				destUpHMSFormatJComboxs.add(destUpHMSFormatJComboBox);
-				first_panel.add(destUpHMSFormatJComboBox, gb);
 				if (Constans.timeUpList != null && i < Constans.timeUpList.size()
 						&& Constans.timeUpList.get(i) != null) {
 					TransferBean transferBean = Constans.timeUpList.get(i);
@@ -340,6 +366,7 @@ public class TimeSettingPanel extends JPanel {
 						destUpHMSFormatJComboBox.setSelectedItem(transferBean.getDestTimeHMSFormat());
 					}
 				}
+				first_panel.add(destUpHMSFormatJComboBox, gb);
 			}
 			// -------------down--------------------
 			for (int j = 0; j < totalColumnNum; j++) {
@@ -416,16 +443,17 @@ public class TimeSettingPanel extends JPanel {
 				second_panel.add(destDownHMSFormatJComboBox, gbDown);
 				if (Constans.timeDownList != null && j < Constans.timeDownList.size()
 						&& Constans.timeDownList.get(j) != null) {
-					int num=j;
-					if(j==1) {
-						num=j+1;
+					int num = j;
+					if (j == 1) {
+						num = j + 1;
 					}
 					TransferBean transferOneBean = Constans.timeDownList.get(num);
-					if (Constans.timeDown.equals(transferOneBean.getType()) && !"".equals(transferOneBean.getSrcColumn())
+					if (Constans.timeDown.equals(transferOneBean.getType())
+							&& !"".equals(transferOneBean.getSrcColumn())
 							&& !Constans.defaultJComboBoxText.equals(transferOneBean.getDestTimeYMDFormat())) {
 						destDownYMDJComboBox.setSelectedItem(transferOneBean.getDestColumn());
 						destDownYMDFormatJComboBox.setSelectedItem(transferOneBean.getDestTimeYMDFormat());
-					} 
+					}
 					TransferBean transferTwoBean = Constans.timeDownList.get(++num);
 					if (Constans.timeDown.equals(transferTwoBean.getType())
 							&& !"".equals(transferTwoBean.getSrcColumn())
@@ -505,11 +533,132 @@ public class TimeSettingPanel extends JPanel {
 				}
 				fwDown.flush();
 				fwDown.close();
+				CommonUtil.encrypt(timeDown_folder, Constans.edit_pw);
 			} else {
 
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("TimeSetting save ", e);
 		}
+		disableAll();
+		isEdit = false;
+	}
+
+	public void enableAll() {
+		logger.info("breakpoint");
+		if (srcUpJComboxs != null && srcDownJComboxs != null && destUpJComboxs != null
+				&& destUpYMDFormatJComboxs != null && destUpHMSFormatJComboxs != null && destDownYMDJComboxs != null
+				&& destDownYMDFormatJComboxs != null && destDownHMSJComboxs != null
+				&& destDownHMSFormatJComboxs != null) {
+			logger.info("breakpoint3");
+			// up
+			for (int i = 0; i < srcUpJComboxs.size(); i++) {
+
+				JComboBox<String> srcUp = srcUpJComboxs.get(i);
+				srcUp.setEnabled(true);
+
+				JComboBox<String> destUp = destUpJComboxs.get(i);
+				destUp.setEnabled(true);
+
+				JComboBox<String> destUpYMD = destUpYMDFormatJComboxs.get(i);
+				destUpYMD.setEnabled(true);
+
+				JComboBox<String> destUpHMS = destUpHMSFormatJComboxs.get(i);
+				destUpHMS.setEnabled(true);
+			}
+
+			// down
+			for (int i = 0; i < srcDownJComboxs.size(); i++) {
+
+				JComboBox<String> srcDown = srcDownJComboxs.get(i);
+				srcDown.setEnabled(true);
+
+				JComboBox<String> destDownYMD = destDownYMDJComboxs.get(i);
+				destDownYMD.setEnabled(true);
+
+				JComboBox<String> destDownYMDFormat = destDownYMDFormatJComboxs.get(i);
+				destDownYMDFormat.setEnabled(true);
+
+				JComboBox<String> destDownHMS = destDownHMSJComboxs.get(i);
+				destDownHMS.setEnabled(true);
+
+				JComboBox<String> destDownHMSFormat = destDownHMSFormatJComboxs.get(i);
+				destDownHMSFormat.setEnabled(true);
+
+			}
+			edit_Btn.setEnabled(true);
+		}
+	}
+
+	public void disableAll() {
+		if (srcUpJComboxs != null && srcDownJComboxs != null && destUpJComboxs != null
+				&& destUpYMDFormatJComboxs != null && destUpHMSFormatJComboxs != null && destDownYMDJComboxs != null
+				&& destDownYMDFormatJComboxs != null && destDownHMSJComboxs != null
+				&& destDownHMSFormatJComboxs != null) {
+			// up
+			for (int i = 0; i < srcUpJComboxs.size(); i++) {
+
+				JComboBox<String> srcUp = srcUpJComboxs.get(i);
+				srcUp.setEnabled(false);
+
+				JComboBox<String> destUp = destUpJComboxs.get(i);
+				destUp.setEnabled(false);
+
+				JComboBox<String> destUpYMD = destUpYMDFormatJComboxs.get(i);
+				destUpYMD.setEnabled(false);
+
+				JComboBox<String> destUpHMS = destUpHMSFormatJComboxs.get(i);
+				destUpHMS.setEnabled(false);
+			}
+
+			// down
+			for (int i = 0; i < srcDownJComboxs.size(); i++) {
+
+				JComboBox<String> srcDown = srcDownJComboxs.get(i);
+				srcDown.setEnabled(false);
+
+				JComboBox<String> destDownYMD = destDownYMDJComboxs.get(i);
+				destDownYMD.setEnabled(false);
+
+				JComboBox<String> destDownYMDFormat = destDownYMDFormatJComboxs.get(i);
+				destDownYMDFormat.setEnabled(false);
+
+				JComboBox<String> destDownHMS = destDownHMSJComboxs.get(i);
+				destDownHMS.setEnabled(false);
+
+				JComboBox<String> destDownHMSFormat = destDownHMSFormatJComboxs.get(i);
+				destDownHMSFormat.setEnabled(false);
+
+			}
+			edit_Btn.setEnabled(false);
+		}
+	}
+
+	public void askSave() {
+		int answer = JOptionPane.showConfirmDialog(this, "尚未儲存設定，是否需要儲存", "儲存設定", JOptionPane.YES_NO_OPTION);
+		if (answer == JOptionPane.YES_OPTION) {
+			save();
+		} else {
+			isEdit = false;
+			loadData();
+		}
+	}
+
+	public void checkPassword() {
+		if (CommonUtil.enterPassword(this)) {
+			enableAll();
+			isEdit = true;
+		}
+	}
+
+	public int getSelectIndex(JComboBox<String> comboBox, String column) {
+		int result = 0;
+		for (int i = 0; i < comboBox.getItemCount(); i++) {
+			String item = comboBox.getItemAt(i);
+			if (column.equals(item)) {
+				result = i;
+			}
+		}
+		return result;
 	}
 }

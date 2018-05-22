@@ -37,6 +37,7 @@ public class SystemConfigUtil {
 			if(input!=null) {
 				properties.load(input);
 			}
+			input.close();
 		} catch (Exception e) {
 			logger.error(propertyFile.getName()+" failure!!", e);
 			throw e;
@@ -55,16 +56,27 @@ public class SystemConfigUtil {
 	public void save(String key,String value) {
 		FileOutputStream out;
 		try {
-			out = new FileOutputStream(new File(Constans.dbproperty));
+			File dbFile=new File(Constans.dbproperty);
+			File decodeDBFile=new File(dbFile.getParent()+File.separator+CommonUtil.getFileNameWithOutExtension(dbFile)+"_decode.txt");
+			CommonUtil.decrypt(dbFile.getPath(), Constans.edit_pw);
+			out = new FileOutputStream(decodeDBFile);
 			if(properties!=null) {
 				properties.setProperty(key, value);
 				properties.store(out, null);
 				out.close();
 			}
+			CommonUtil.encrypt(decodeDBFile.getPath(), Constans.edit_pw);
+			if(dbFile.exists()) {
+				dbFile.delete();
+			}
+			decodeDBFile.renameTo(dbFile);
+			decodeDBFile.delete();
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			logger.error("SystemConfigUtil error",e);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("SystemConfigUtil error",e);
+		} catch (Exception e) {
+			logger.error("SystemConfigUtil error",e);
 		}
 	}
 }

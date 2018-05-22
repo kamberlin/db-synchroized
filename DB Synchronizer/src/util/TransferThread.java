@@ -22,7 +22,8 @@ public class TransferThread extends Thread {
 	boolean running = true;
 	JTextArea textArea = null;
 	SimpleDateFormat sf = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
-	ArrayList<TransferBean> allTransfer=new ArrayList<TransferBean>();
+	ArrayList<TransferBean> allTransfer = new ArrayList<TransferBean>();
+
 	public TransferThread(JTextArea textArea) {
 		super();
 		this.textArea = textArea;
@@ -33,14 +34,15 @@ public class TransferThread extends Thread {
 		super.run();
 		while (running) {
 			try {
-				textArea.append(getTime() + " 啟動服務 \r\n");
+				addMessage(getTime() + " 啟動服務 \r\n");
+				allTransfer = new ArrayList<TransferBean>();
 				prepare();
 				db();
 				Thread.sleep(Integer.parseInt(Constans.sequence_s) * 1000);
 			} catch (NumberFormatException e) {
-				e.printStackTrace();
+				logger.error("TransferThread error",e);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				logger.error("TransferThread error",e);
 			}
 		}
 		logger.info("thread is end");
@@ -56,7 +58,7 @@ public class TransferThread extends Thread {
 		if (Constans.timeDownList != null) {
 			allTransfer.addAll(Constans.timeDownList);
 		}
-		if(allTransfer!=null) {
+		if (allTransfer != null) {
 			srcColumns = new ArrayList<String>();
 			destColumns = new ArrayList<String>();
 			for (int i = 0; i < allTransfer.size(); i++) {
@@ -72,7 +74,7 @@ public class TransferThread extends Thread {
 		if (Constans.srcColumns != null) {
 			pk = Constans.srcColumns.get(0);
 		}
-		logger.info("pk="+pk);
+		logger.info("pk=" + pk);
 
 	}
 
@@ -112,8 +114,8 @@ public class TransferThread extends Thread {
 
 			srcSQL.append(
 					" from " + Constans.srcDBInfo.getTableName() + " where " + Constans.condition_column + " = ?");
-			 logger.info("srcSQL=" + srcSQL.toString());
-			 logger.info("destSQL=" + destSQL.toString());
+			logger.info("srcSQL=" + srcSQL.toString());
+			logger.info("destSQL=" + destSQL.toString());
 
 			PreparedStatement srcPS = srcDAO.prepareStatement(srcSQL.toString());
 			PreparedStatement destPS = destDAO.prepareStatement(destSQL.toString());
@@ -123,7 +125,7 @@ public class TransferThread extends Thread {
 			boolean updateSQLFinished = false;
 			int srcCount = 0, destCount = 0;
 			SimpleDateFormat srcSF = new SimpleDateFormat("yyyyMMddHHmmss");
-			logger.info("allTransfer size="+allTransfer.size());
+			logger.info("allTransfer size=" + allTransfer.size());
 			while (srcRS.next()) {
 				srcCount++;
 				int index = 1;
@@ -131,10 +133,8 @@ public class TransferThread extends Thread {
 					TransferBean transferBean = allTransfer.get(i);
 					// 時間欄位
 					if (Constans.timeUp.equals(transferBean.getType())) {
-						if (transferBean.getSrcColumn() != null
-								&& !"".equals(transferBean.getSrcColumn())
-								&& transferBean.getDestColumn() != null
-								&& !"".equals(transferBean.getDestColumn())
+						if (transferBean.getSrcColumn() != null && !"".equals(transferBean.getSrcColumn())
+								&& transferBean.getDestColumn() != null && !"".equals(transferBean.getDestColumn())
 								&& transferBean.getDestTimeYMDFormat() != null
 								&& !Constans.defaultJComboBoxText.equals(transferBean.getDestTimeYMDFormat())
 								&& transferBean.getDestTimeHMSFormat() != null
@@ -151,10 +151,8 @@ public class TransferThread extends Thread {
 					}
 					// 時間欄位 切欄位
 					else if (Constans.timeDown.equals(transferBean.getType())) {
-						if (transferBean.getSrcColumn() != null
-								&& !"".equals(transferBean.getSrcColumn())
-								&& transferBean.getDestColumn() != null
-								&& !"".equals(transferBean.getDestColumn())
+						if (transferBean.getSrcColumn() != null && !"".equals(transferBean.getSrcColumn())
+								&& transferBean.getDestColumn() != null && !"".equals(transferBean.getDestColumn())
 								&& transferBean.getDestTimeYMDFormat() != null
 								&& !Constans.defaultJComboBoxText.equals(transferBean.getDestTimeYMDFormat())) {
 							SimpleDateFormat destSF = new SimpleDateFormat(transferBean.getDestTimeYMDFormat());
@@ -188,7 +186,7 @@ public class TransferThread extends Thread {
 					else if (transferBean.getSrcColumn() == null && transferBean.getDestColumn() != null
 							&& transferBean.getDestContent() != null && !"".equals(transferBean.getDestContent())) {
 						destPS.setString(index++, transferBean.getDestContent());
-					}else {
+					} else {
 						logger.info(transferBean.getSrcColumn());
 					}
 					if (!updateSQLFinished) {
@@ -212,7 +210,7 @@ public class TransferThread extends Thread {
 				}
 			}
 			destPS.close();
-			textArea.append(getTime() + " 讀取來源資料庫 " + srcCount + " 筆，寫入目標資料庫成功 " + destCount + "，失敗 "
+			addMessage(getTime() + " 讀取來源資料庫 " + srcCount + " 筆，寫入目標資料庫成功 " + destCount + "，失敗 "
 					+ (srcCount - destCount) + " 筆 \r\n");
 			updateSrcSQL = updateSrcSQL.substring(0, updateSrcSQL.length() - 1) + " where " + pk + "=?";
 			if (updateList != null) {
@@ -226,7 +224,7 @@ public class TransferThread extends Thread {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("TransferThread error",e);
 		}
 	}
 
@@ -237,9 +235,9 @@ public class TransferThread extends Thread {
 	public void setRunning(boolean running) {
 		this.running = running;
 		if (running == false) {
-			textArea.append(getTime() + " 停止服務! \r\n");
+			addMessage(getTime() + " 停止服務! \r\n");
 		} else {
-			textArea.append(getTime() + " 啟動服務! \r\n");
+			addMessage(getTime() + " 啟動服務! \r\n");
 		}
 	}
 
@@ -247,4 +245,12 @@ public class TransferThread extends Thread {
 		return sf.format(new Date());
 	}
 
+	public void addMessage(String message) {
+		if (textArea != null) {
+			if (textArea.getLineCount() > 100) {
+				textArea.setText("");
+			}
+			textArea.append(message);
+		}
+	}
 }

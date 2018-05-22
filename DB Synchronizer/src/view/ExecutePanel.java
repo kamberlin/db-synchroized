@@ -1,6 +1,7 @@
 package view;
 
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -26,6 +27,9 @@ public class ExecutePanel extends JPanel {
 	boolean running = false;
 	private static Logger logger = LogManager.getLogger(ExecutePanel.class);
 	TransferThread transferThread = null;
+
+	Font titleFont = new Font("微軟正黑體", Font.PLAIN, 24);
+	Font textFont = new Font("微軟正黑體", Font.PLAIN, 18);
 	/**
 	 * 
 	 */
@@ -43,12 +47,17 @@ public class ExecutePanel extends JPanel {
 		JPanel upPanel = new JPanel();
 		upPanel.setLayout(new TableLayout(sizeUp));
 		TitledBorder tb = new TitledBorder("服務控制列");
+		tb.setTitleFont(titleFont);
 		tb.setTitleJustification(TitledBorder.LEFT);
 		upPanel.setBorder(tb);
 		JLabel statusTitleLabel = new JLabel("服務狀態:");
+		statusTitleLabel.setFont(titleFont);
 		JLabel statusTextLabel = new JLabel("服務執行中!");
+		statusTextLabel.setFont(titleFont);
 		JButton startBtn = new JButton("啟動服務");
+		startBtn.setFont(titleFont);
 		JButton stopBtn = new JButton("停止服務");
+		stopBtn.setFont(titleFont);
 		upPanel.add(statusTitleLabel, "0,0");
 		upPanel.add(statusTextLabel, "1,0");
 		upPanel.add(startBtn, "2,0");
@@ -56,6 +65,7 @@ public class ExecutePanel extends JPanel {
 		JPanel downPanel = new JPanel();
 		downPanel.setLayout(new GridLayout());
 		JTextArea textArea = new JTextArea();
+		textArea.setFont(textFont);
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setPreferredSize(new Dimension(400, 300));
 		scrollPane.setViewportView(textArea);
@@ -104,18 +114,28 @@ public class ExecutePanel extends JPanel {
 			File column_file = new File(column_folder);
 			File timeUp_file = new File(timeUp_folder);
 			File timeDown_file = new File(timeDown_folder);
+			//解密檔案
+			File columnDecode = new File(column_file.getParent() + File.separator+CommonUtil.getFileNameWithOutExtension(column_file) + "_decode.txt");
+			CommonUtil.decrypt(column_file.getPath(), Constans.edit_pw);
+			File timeUpDecode = new File(timeUp_file.getParent() + File.separator+CommonUtil.getFileNameWithOutExtension(timeUp_file) + "_decode.txt");
+			File timeDownDecode = new File(timeDown_file.getParent() + File.separator+CommonUtil.getFileNameWithOutExtension(timeDown_file) + "_decode.txt");
+			CommonUtil.decrypt(timeUp_file.getPath(), Constans.edit_pw);
+			CommonUtil.decrypt(timeDown_file.getPath(), Constans.edit_pw);
 			int fileCount = 0;
-			if (column_file.exists()) {
-				CommonUtil.readColumnFile(column_file);
+			if (columnDecode.exists()) {
+				CommonUtil.readColumnFile(columnDecode);
 				fileCount++;
+				columnDecode.delete();
 			}
-			if (timeUp_file.exists()) {
-				CommonUtil.readTimeUpFile(timeUp_file);
+			if (timeUpDecode.exists()) {
+				CommonUtil.readTimeUpFile(timeUpDecode);
 				fileCount++;
+				timeUpDecode.delete();
 			}
-			if (timeDown_file.exists()) {
-				CommonUtil.readTimeDownFile(timeDown_file);
+			if (timeDownDecode.exists()) {
+				CommonUtil.readTimeDownFile(timeDownDecode);
 				fileCount++;
+				timeDownDecode.delete();
 			}
 			if (fileCount < 2) {
 				JOptionPane.showMessageDialog(this, "無法找到設定檔，請檢查是否有儲存設定", "執行異常", JOptionPane.ERROR_MESSAGE);
@@ -124,7 +144,8 @@ public class ExecutePanel extends JPanel {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.info("ExecutePanel error",e);
 		}
 	}
+
 }
