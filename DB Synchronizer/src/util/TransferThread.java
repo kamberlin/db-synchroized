@@ -8,9 +8,8 @@ import java.util.Date;
 
 import javax.swing.JTextArea;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import util.LogManager;
+import util.Logger;
 import bean.TransferBean;
 import dao.DAOSQL;
 
@@ -38,7 +37,7 @@ public class TransferThread extends Thread {
 				allTransfer = new ArrayList<TransferBean>();
 				prepare();
 				db();
-				Thread.sleep(Integer.parseInt(Constans.sequence_s) * 1000);
+				Thread.sleep(Integer.parseInt(DBSynConstans.sequence_s) * 1000);
 			} catch (NumberFormatException e) {
 				logger.error("TransferThread error",e);
 			} catch (InterruptedException e) {
@@ -49,14 +48,14 @@ public class TransferThread extends Thread {
 	}
 
 	public void prepare() {
-		if (Constans.columnList != null) {
-			allTransfer.addAll(Constans.columnList);
+		if (DBSynConstans.columnList != null) {
+			allTransfer.addAll(DBSynConstans.columnList);
 		}
-		if (Constans.timeUpList != null) {
-			allTransfer.addAll(Constans.timeUpList);
+		if (DBSynConstans.timeUpList != null) {
+			allTransfer.addAll(DBSynConstans.timeUpList);
 		}
-		if (Constans.timeDownList != null) {
-			allTransfer.addAll(Constans.timeDownList);
+		if (DBSynConstans.timeDownList != null) {
+			allTransfer.addAll(DBSynConstans.timeDownList);
 		}
 		if (allTransfer != null) {
 			srcColumns = new ArrayList<String>();
@@ -71,8 +70,8 @@ public class TransferThread extends Thread {
 				}
 			}
 		}
-		if (Constans.srcColumns != null) {
-			pk = Constans.srcColumns.get(0);
+		if (DBSynConstans.srcColumns != null) {
+			pk = DBSynConstans.srcColumns.get(0);
 		}
 		logger.info("pk=" + pk);
 
@@ -83,13 +82,13 @@ public class TransferThread extends Thread {
 			DAOSQL srcDAO = null;
 			DAOSQL destDAO = null;
 			StringBuilder srcSQL = new StringBuilder(" SELECT ");
-			StringBuilder destSQL = new StringBuilder(" INSERT INTO " + Constans.destDBInfo.getTableName() + "(");
+			StringBuilder destSQL = new StringBuilder(" INSERT INTO " + DBSynConstans.destDBInfo.getTableName() + "(");
 			ArrayList<String> updateList = null;
-			if (Constans.srcDBInfo != null) {
-				srcDAO = DBUtil.getDBConnection(Constans.srcDBInfo);
+			if (DBSynConstans.srcDBInfo != null) {
+				srcDAO = DBUtil.getDBConnection(DBSynConstans.srcDBInfo);
 			}
-			if (Constans.destDBInfo != null) {
-				destDAO = DBUtil.getDBConnection(Constans.destDBInfo);
+			if (DBSynConstans.destDBInfo != null) {
+				destDAO = DBUtil.getDBConnection(DBSynConstans.destDBInfo);
 			}
 			for (int i = 0; i < srcColumns.size(); i++) {
 				srcSQL.append(srcColumns.get(i));
@@ -113,15 +112,15 @@ public class TransferThread extends Thread {
 			destSQL.append(")");
 
 			srcSQL.append(
-					" from " + Constans.srcDBInfo.getTableName() + " where " + Constans.condition_column + " = ?");
+					" from " + DBSynConstans.srcDBInfo.getTableName() + " where " + DBSynConstans.condition_column + " = ?");
 			logger.info("srcSQL=" + srcSQL.toString());
 			logger.info("destSQL=" + destSQL.toString());
 
 			PreparedStatement srcPS = srcDAO.prepareStatement(srcSQL.toString());
 			PreparedStatement destPS = destDAO.prepareStatement(destSQL.toString());
-			srcPS.setString(1, Constans.condition);
+			srcPS.setString(1, DBSynConstans.condition);
 			ResultSet srcRS = srcPS.executeQuery();
-			String updateSrcSQL = "UPDATE " + Constans.srcDBInfo.getTableName() + " SET ";
+			String updateSrcSQL = "UPDATE " + DBSynConstans.srcDBInfo.getTableName() + " SET ";
 			boolean updateSQLFinished = false;
 			int srcCount = 0, destCount = 0;
 			SimpleDateFormat srcSF = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -132,13 +131,13 @@ public class TransferThread extends Thread {
 				for (int i = 0; i < allTransfer.size(); i++) {
 					TransferBean transferBean = allTransfer.get(i);
 					// 時間欄位
-					if (Constans.timeUp.equals(transferBean.getType())) {
+					if (DBSynConstans.timeUp.equals(transferBean.getType())) {
 						if (transferBean.getSrcColumn() != null && !"".equals(transferBean.getSrcColumn())
 								&& transferBean.getDestColumn() != null && !"".equals(transferBean.getDestColumn())
 								&& transferBean.getDestTimeYMDFormat() != null
-								&& !Constans.defaultJComboBoxText.equals(transferBean.getDestTimeYMDFormat())
+								&& !DBSynConstans.defaultJComboBoxText.equals(transferBean.getDestTimeYMDFormat())
 								&& transferBean.getDestTimeHMSFormat() != null
-								&& !Constans.defaultJComboBoxText.equals(transferBean.getDestTimeHMSFormat())) {
+								&& !DBSynConstans.defaultJComboBoxText.equals(transferBean.getDestTimeHMSFormat())) {
 							SimpleDateFormat destSF = new SimpleDateFormat(
 									transferBean.getDestTimeYMDFormat() + " " + transferBean.getDestTimeHMSFormat());
 							String timeS = srcRS.getString(transferBean.getSrcColumn());
@@ -150,11 +149,11 @@ public class TransferThread extends Thread {
 						}
 					}
 					// 時間欄位 切欄位
-					else if (Constans.timeDown.equals(transferBean.getType())) {
+					else if (DBSynConstans.timeDown.equals(transferBean.getType())) {
 						if (transferBean.getSrcColumn() != null && !"".equals(transferBean.getSrcColumn())
 								&& transferBean.getDestColumn() != null && !"".equals(transferBean.getDestColumn())
 								&& transferBean.getDestTimeYMDFormat() != null
-								&& !Constans.defaultJComboBoxText.equals(transferBean.getDestTimeYMDFormat())) {
+								&& !DBSynConstans.defaultJComboBoxText.equals(transferBean.getDestTimeYMDFormat())) {
 							SimpleDateFormat destSF = new SimpleDateFormat(transferBean.getDestTimeYMDFormat());
 							String timeS = srcRS.getString(transferBean.getSrcColumn());
 							String destTime = null;
@@ -163,11 +162,11 @@ public class TransferThread extends Thread {
 							}
 							destPS.setString(index++, destTime);
 						} else if (transferBean.getSrcColumn() != null
-								&& !Constans.defaultJComboBoxText.equals(transferBean.getSrcColumn())
+								&& !DBSynConstans.defaultJComboBoxText.equals(transferBean.getSrcColumn())
 								&& transferBean.getDestColumn() != null
-								&& !Constans.defaultJComboBoxText.equals(transferBean.getDestColumn())
+								&& !DBSynConstans.defaultJComboBoxText.equals(transferBean.getDestColumn())
 								&& transferBean.getDestTimeHMSFormat() != null
-								&& !Constans.defaultJComboBoxText.equals(transferBean.getDestTimeHMSFormat())) {
+								&& !DBSynConstans.defaultJComboBoxText.equals(transferBean.getDestTimeHMSFormat())) {
 							SimpleDateFormat destSF = new SimpleDateFormat(transferBean.getDestTimeHMSFormat());
 							String timeS = srcRS.getString(transferBean.getSrcColumn());
 							String destTime = null;

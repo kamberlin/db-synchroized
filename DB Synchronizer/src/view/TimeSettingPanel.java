@@ -5,15 +5,13 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.border.TitledBorder;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import bean.TransferBean;
 import util.CommonUtil;
-import util.Constans;
+import util.DBSynConstans;
 import util.DBUtil;
 import util.SystemConfigUtil;
-
+import util.LogManager;
+import util.Logger;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -68,9 +66,6 @@ public class TimeSettingPanel extends JPanel {
 
 	int totalColumnNum = 2;
 
-	Font titleFont = new Font("微軟正黑體", Font.PLAIN, 24);
-	Font textFont = new Font("微軟正黑體", Font.PLAIN, 18);
-
 	/**
 	 * Create the panel.
 	 */
@@ -81,7 +76,7 @@ public class TimeSettingPanel extends JPanel {
 
 		first_panel = new JPanel();
 		TitledBorder firstTitle = new TitledBorder("時間格式轉換設定");
-		firstTitle.setTitleFont(titleFont);
+		firstTitle.setTitleFont(DBSynConstans.titleFont);
 		firstTitle.setTitleJustification(TitledBorder.LEFT);
 		first_panel.setBorder(firstTitle);
 		gbl_first_layout = new GridBagLayout();
@@ -99,7 +94,7 @@ public class TimeSettingPanel extends JPanel {
 
 		second_panel = new JPanel();
 		TitledBorder secondTitle = new TitledBorder("時間格式轉換設定(拆欄位)");
-		secondTitle.setTitleFont(titleFont);
+		secondTitle.setTitleFont(DBSynConstans.titleFont);
 		secondTitle.setTitleJustification(TitledBorder.LEFT);
 		second_panel.setBorder(secondTitle);
 		gbl_second_layout = new GridBagLayout();
@@ -119,7 +114,7 @@ public class TimeSettingPanel extends JPanel {
 		gbl_btn_layout = new GridBagLayout();
 		btn_panel.setLayout(gbl_btn_layout);
 		edit_Btn = new JButton("修改設定");
-		edit_Btn.setFont(textFont);
+		edit_Btn.setFont(DBSynConstans.textFont);
 		btn_panel.add(edit_Btn);
 		GridBagConstraints gbThird = new GridBagConstraints();
 		gbThird.gridx = 0;
@@ -165,36 +160,41 @@ public class TimeSettingPanel extends JPanel {
 
 	public void loadDataFromFile() {
 		try {
-			SystemConfigUtil systemConfigUtil = new SystemConfigUtil(Constans.mainproperty);
+			SystemConfigUtil systemConfigUtil = new SystemConfigUtil(DBSynConstans.mainproperty);
 			String timeUp_folder = systemConfigUtil.get("timeUp.folder");
 			String timeDown_folder = systemConfigUtil.get("timeDown.folder");
-			//加密檔案
+			// 加密檔案
 			File timeUp_file = new File(timeUp_folder);
 			File timeDown_file = new File(timeDown_folder);
-			//解密暫存檔
-			File timeUpDecode = new File(timeUp_file.getParent() + File.separator+CommonUtil.getFileNameWithOutExtension(timeUp_file) + "_decode.txt");
-			File timeDownDecode = new File(timeDown_file.getParent() + File.separator+CommonUtil.getFileNameWithOutExtension(timeDown_file) + "_decode.txt");
-			CommonUtil.decrypt(timeUp_file.getPath(), Constans.edit_pw);
-			CommonUtil.decrypt(timeDown_file.getPath(), Constans.edit_pw);
-			if (timeUpDecode.exists()) {
-				CommonUtil.readTimeUpFile(timeUpDecode);
-				timeUpDecode.delete();
+			if (timeUp_file.exists()) {
+				// 解密暫存檔
+				File timeUpDecode = new File(timeUp_file.getParent() + File.separator
+						+ CommonUtil.getFileNameWithOutExtension(timeUp_file) + "_decode.txt");
+				CommonUtil.decrypt(timeUp_file.getPath(), DBSynConstans.edit_pw);
+				if (timeUpDecode.exists()) {
+					CommonUtil.readTimeUpFile(timeUpDecode);
+					timeUpDecode.delete();
+				}
 			}
-			if (timeDownDecode.exists()) {
-				CommonUtil.readTimeDownFile(timeDownDecode);
-				timeDownDecode.delete();
+			if (timeDown_file.exists()) {
+				File timeDownDecode = new File(timeDown_file.getParent() + File.separator
+						+ CommonUtil.getFileNameWithOutExtension(timeDown_file) + "_decode.txt");
+				CommonUtil.decrypt(timeDown_file.getPath(), DBSynConstans.edit_pw);
+				if (timeDownDecode.exists()) {
+					CommonUtil.readTimeDownFile(timeDownDecode);
+					timeDownDecode.delete();
+				}
 			}
-
 		} catch (Exception e) {
-			logger.error("error",e);
+			logger.error("error", e);
 		}
 	}
 
 	public boolean getDestColumnsFromDB() {
 		boolean result = false;
-		if (DBUtil.checkAllNotEmpty(Constans.destDBInfo)) {
+		if (DBUtil.checkAllNotEmpty(DBSynConstans.destDBInfo)) {
 			DBUtil.getDestColumnsFromDB();
-			if (Constans.destColumns == null || Constans.destColumns.size() == 0) {
+			if (DBSynConstans.destColumns == null || DBSynConstans.destColumns.size() == 0) {
 				JOptionPane.showMessageDialog(this, "目標資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
 			}
 		} else {
@@ -204,7 +204,7 @@ public class TimeSettingPanel extends JPanel {
 	}
 
 	public void genSrcColumn() {
-		if (Constans.srcColumns != null) {
+		if (DBSynConstans.srcColumns != null) {
 			if (srcUpJComboxs == null) {
 				srcUpJComboxs = new ArrayList<JComboBox<String>>();
 			}
@@ -215,7 +215,7 @@ public class TimeSettingPanel extends JPanel {
 			for (int i = 0; i < totalColumnNum; i++) {
 				GridBagConstraints gb = new GridBagConstraints();
 				JLabel srcUp_Label = new JLabel("來源時間欄位:");
-				srcUp_Label.setFont(titleFont);
+				srcUp_Label.setFont(DBSynConstans.titleFont);
 				gb.insets = new Insets(2, 3, 2, 3);
 				gb.gridx = 0;
 				gb.gridy = i * 2;
@@ -224,7 +224,7 @@ public class TimeSettingPanel extends JPanel {
 				gb.weighty = 2;
 				first_panel.add(srcUp_Label, gb);
 				JComboBox<String> srcUpJComboBox = CommonUtil.createColumnsJCombox("src");
-				srcUpJComboBox.setFont(textFont);
+				srcUpJComboBox.setFont(DBSynConstans.textFont);
 				srcUpJComboxs.add(srcUpJComboBox);
 				gb.gridx++;
 				gb.gridwidth = 1;
@@ -233,7 +233,7 @@ public class TimeSettingPanel extends JPanel {
 				first_panel.add(srcUpJComboBox, gb);
 
 				JLabel srcDown_Label = new JLabel("來源時間欄位:");
-				srcDown_Label.setFont(titleFont);
+				srcDown_Label.setFont(DBSynConstans.titleFont);
 				gb.gridx = 0;
 				gb.gridy = i * 2;
 				gb.gridwidth = 1;
@@ -241,7 +241,7 @@ public class TimeSettingPanel extends JPanel {
 				gb.weighty = 2;
 				second_panel.add(srcDown_Label, gb);
 				JComboBox<String> srcDownJComboBox = CommonUtil.createColumnsJCombox("src");
-				srcDownJComboBox.setFont(textFont);
+				srcDownJComboBox.setFont(DBSynConstans.textFont);
 				srcDownJComboxs.add(srcDownJComboBox);
 				gb.gridx++;
 				gb.gridwidth = 1;
@@ -250,22 +250,23 @@ public class TimeSettingPanel extends JPanel {
 				second_panel.add(srcDownJComboBox, gb);
 
 				TransferBean transfeBean = null;
-				if (Constans.timeUpList != null && i < Constans.timeUpList.size()
-						&& Constans.timeUpList.get(i) != null) {
-					transfeBean = Constans.timeUpList.get(i);
+				if (DBSynConstans.timeUpList != null && i < DBSynConstans.timeUpList.size()
+						&& DBSynConstans.timeUpList.get(i) != null) {
+					transfeBean = DBSynConstans.timeUpList.get(i);
 					if (!"".equals(transfeBean.getSrcColumn())
-							&& !Constans.defaultJComboBoxText.equals(transfeBean.getDestTimeYMDFormat())
-							&& !Constans.defaultJComboBoxText.equals(transfeBean.getDestTimeHMSFormat())) {
+							&& !DBSynConstans.defaultJComboBoxText.equals(transfeBean.getDestTimeYMDFormat())
+							&& !DBSynConstans.defaultJComboBoxText.equals(transfeBean.getDestTimeHMSFormat())) {
 						srcUpJComboBox.setSelectedItem(transfeBean.getSrcColumn());
 					}
 				}
-				if (Constans.timeDownList != null && i < Constans.timeDownList.size()
-						&& Constans.timeDownList.get(i) != null) {
-					transfeBean = Constans.timeDownList.get(i);
+				if (DBSynConstans.timeDownList != null && i < DBSynConstans.timeDownList.size()
+						&& DBSynConstans.timeDownList.get(i) != null) {
+					transfeBean = DBSynConstans.timeDownList.get(i);
 					if ((!"".equals(transfeBean.getSrcColumn())
-							&& !Constans.defaultJComboBoxText.equals(transfeBean.getDestTimeYMDFormat()))
-							|| (!Constans.defaultJComboBoxText.equals(transfeBean.getSrcColumn())
-									&& !Constans.defaultJComboBoxText.equals(transfeBean.getDestTimeHMSFormat()))) {
+							&& !DBSynConstans.defaultJComboBoxText.equals(transfeBean.getDestTimeYMDFormat()))
+							|| (!DBSynConstans.defaultJComboBoxText.equals(transfeBean.getSrcColumn())
+									&& !DBSynConstans.defaultJComboBoxText
+											.equals(transfeBean.getDestTimeHMSFormat()))) {
 						if (!previosSrc.equals(transfeBean.getSrcColumn())) {
 							srcDownJComboBox.setSelectedItem(transfeBean.getSrcColumn());
 							previosSrc = transfeBean.getSrcColumn();
@@ -279,7 +280,7 @@ public class TimeSettingPanel extends JPanel {
 	}
 
 	public void genDestColumn() {
-		if (Constans.destColumns != null) {
+		if (DBSynConstans.destColumns != null) {
 			if (destUpJComboxs == null) {
 				destUpJComboxs = new ArrayList<JComboBox<String>>();
 			}
@@ -304,7 +305,7 @@ public class TimeSettingPanel extends JPanel {
 			for (int i = 0; i < totalColumnNum; i++) {
 				GridBagConstraints gb = new GridBagConstraints();
 				JLabel dest_Label = new JLabel("目標時間欄位:");
-				dest_Label.setFont(titleFont);
+				dest_Label.setFont(DBSynConstans.titleFont);
 				gb.insets = new Insets(2, 3, 2, 3);
 				gb.gridx = 2;
 				gb.gridy = i * 2;
@@ -314,7 +315,7 @@ public class TimeSettingPanel extends JPanel {
 				first_panel.add(dest_Label, gb);
 
 				JComboBox<String> destUpJComboBox = CommonUtil.createColumnsJCombox("dest");
-				destUpJComboBox.setFont(textFont);
+				destUpJComboBox.setFont(DBSynConstans.textFont);
 				destUpJComboxs.add(destUpJComboBox);
 				gb.gridx++;
 				gb.gridwidth = 1;
@@ -323,7 +324,7 @@ public class TimeSettingPanel extends JPanel {
 				first_panel.add(destUpJComboBox, gb);
 
 				JLabel ymd_Label = new JLabel("年月日時間格式:");
-				ymd_Label.setFont(titleFont);
+				ymd_Label.setFont(DBSynConstans.titleFont);
 				gb.gridx++;
 				gb.gridwidth = 1;
 				gb.weightx = 0.1;
@@ -331,7 +332,7 @@ public class TimeSettingPanel extends JPanel {
 				first_panel.add(ymd_Label, gb);
 
 				JComboBox<String> destUpYMDFormatJComboBox = CommonUtil.createTimeYMDFormatJCombox();
-				destUpYMDFormatJComboBox.setFont(textFont);
+				destUpYMDFormatJComboBox.setFont(DBSynConstans.textFont);
 				gb.gridx++;
 				gb.gridwidth = 1;
 				gb.weightx = 0.1;
@@ -340,7 +341,7 @@ public class TimeSettingPanel extends JPanel {
 				first_panel.add(destUpYMDFormatJComboBox, gb);
 
 				JLabel hms_Label = new JLabel("時分秒時間格式:");
-				hms_Label.setFont(titleFont);
+				hms_Label.setFont(DBSynConstans.titleFont);
 				gb.gridx = 4;
 				gb.gridy = i * 2 + 1;
 				gb.gridwidth = 1;
@@ -349,18 +350,18 @@ public class TimeSettingPanel extends JPanel {
 				first_panel.add(hms_Label, gb);
 
 				JComboBox<String> destUpHMSFormatJComboBox = CommonUtil.createTimeHMSFormatJCombox();
-				destUpHMSFormatJComboBox.setFont(textFont);
+				destUpHMSFormatJComboBox.setFont(DBSynConstans.textFont);
 				gb.gridx = 5;
 				gb.gridwidth = 1;
 				gb.weightx = 0.1;
 				gb.weighty = 1;
 				destUpHMSFormatJComboxs.add(destUpHMSFormatJComboBox);
-				if (Constans.timeUpList != null && i < Constans.timeUpList.size()
-						&& Constans.timeUpList.get(i) != null) {
-					TransferBean transferBean = Constans.timeUpList.get(i);
+				if (DBSynConstans.timeUpList != null && i < DBSynConstans.timeUpList.size()
+						&& DBSynConstans.timeUpList.get(i) != null) {
+					TransferBean transferBean = DBSynConstans.timeUpList.get(i);
 					if (!"".equals(transferBean.getSrcColumn())
-							&& !Constans.defaultJComboBoxText.equals(transferBean.getDestTimeYMDFormat())
-							&& !Constans.defaultJComboBoxText.equals(transferBean.getDestTimeHMSFormat())) {
+							&& !DBSynConstans.defaultJComboBoxText.equals(transferBean.getDestTimeYMDFormat())
+							&& !DBSynConstans.defaultJComboBoxText.equals(transferBean.getDestTimeHMSFormat())) {
 						destUpJComboBox.setSelectedItem(transferBean.getDestColumn());
 						destUpYMDFormatJComboBox.setSelectedItem(transferBean.getDestTimeYMDFormat());
 						destUpHMSFormatJComboBox.setSelectedItem(transferBean.getDestTimeHMSFormat());
@@ -372,7 +373,7 @@ public class TimeSettingPanel extends JPanel {
 			for (int j = 0; j < totalColumnNum; j++) {
 				GridBagConstraints gbDown = new GridBagConstraints();
 				JLabel destYMD_Label = new JLabel("目標時間欄位(年月日):");
-				destYMD_Label.setFont(titleFont);
+				destYMD_Label.setFont(DBSynConstans.titleFont);
 				gbDown.insets = new Insets(2, 3, 2, 3);
 				gbDown.gridx = 2;
 				gbDown.gridy = j * 2;
@@ -382,7 +383,7 @@ public class TimeSettingPanel extends JPanel {
 				second_panel.add(destYMD_Label, gbDown);
 
 				JComboBox<String> destDownYMDJComboBox = CommonUtil.createColumnsJCombox("dest");
-				destDownYMDJComboBox.setFont(textFont);
+				destDownYMDJComboBox.setFont(DBSynConstans.textFont);
 				gbDown.gridx++;
 				gbDown.gridwidth = 1;
 				gbDown.weightx = 0.1;
@@ -391,7 +392,7 @@ public class TimeSettingPanel extends JPanel {
 				second_panel.add(destDownYMDJComboBox, gbDown);
 
 				JLabel ymdFormat_Label = new JLabel("時間格式:");
-				ymdFormat_Label.setFont(titleFont);
+				ymdFormat_Label.setFont(DBSynConstans.titleFont);
 				gbDown.gridx++;
 				gbDown.gridwidth = 1;
 				gbDown.weightx = 0.1;
@@ -399,7 +400,7 @@ public class TimeSettingPanel extends JPanel {
 				second_panel.add(ymdFormat_Label, gbDown);
 
 				JComboBox<String> destDownYMDFormatJComboBox = CommonUtil.createTimeYMDFormatJCombox();
-				destDownYMDFormatJComboBox.setFont(textFont);
+				destDownYMDFormatJComboBox.setFont(DBSynConstans.textFont);
 				gbDown.gridx++;
 				gbDown.gridwidth = 1;
 				gbDown.weightx = 0.1;
@@ -408,7 +409,7 @@ public class TimeSettingPanel extends JPanel {
 				second_panel.add(destDownYMDFormatJComboBox, gbDown);
 
 				JLabel destHms_Label = new JLabel("目標時間欄位(時分秒):");
-				destHms_Label.setFont(titleFont);
+				destHms_Label.setFont(DBSynConstans.titleFont);
 				gbDown.gridx = 2;
 				gbDown.gridy = j * 2 + 1;
 				gbDown.gridwidth = 1;
@@ -417,7 +418,7 @@ public class TimeSettingPanel extends JPanel {
 				second_panel.add(destHms_Label, gbDown);
 
 				JComboBox<String> destDownHMSJComboBox = CommonUtil.createColumnsJCombox("dest");
-				destDownHMSJComboBox.setFont(textFont);
+				destDownHMSJComboBox.setFont(DBSynConstans.textFont);
 				gbDown.gridx++;
 				gbDown.gridwidth = 1;
 				gbDown.weightx = 0.1;
@@ -426,7 +427,7 @@ public class TimeSettingPanel extends JPanel {
 				second_panel.add(destDownHMSJComboBox, gbDown);
 
 				JLabel hmsFormat_Label = new JLabel("時間格式:");
-				hmsFormat_Label.setFont(titleFont);
+				hmsFormat_Label.setFont(DBSynConstans.titleFont);
 				gbDown.gridx++;
 				gbDown.gridwidth = 1;
 				gbDown.weightx = 0.1;
@@ -434,30 +435,30 @@ public class TimeSettingPanel extends JPanel {
 				second_panel.add(hmsFormat_Label, gbDown);
 
 				JComboBox<String> destDownHMSFormatJComboBox = CommonUtil.createTimeHMSFormatJCombox();
-				destDownHMSFormatJComboBox.setFont(textFont);
+				destDownHMSFormatJComboBox.setFont(DBSynConstans.textFont);
 				gbDown.gridx++;
 				gbDown.gridwidth = 1;
 				gbDown.weightx = 0.1;
 				gbDown.weighty = 1;
 				destDownHMSFormatJComboxs.add(destDownHMSFormatJComboBox);
 				second_panel.add(destDownHMSFormatJComboBox, gbDown);
-				if (Constans.timeDownList != null && j < Constans.timeDownList.size()
-						&& Constans.timeDownList.get(j) != null) {
+				if (DBSynConstans.timeDownList != null && j < DBSynConstans.timeDownList.size()
+						&& DBSynConstans.timeDownList.get(j) != null) {
 					int num = j;
 					if (j == 1) {
 						num = j + 1;
 					}
-					TransferBean transferOneBean = Constans.timeDownList.get(num);
-					if (Constans.timeDown.equals(transferOneBean.getType())
+					TransferBean transferOneBean = DBSynConstans.timeDownList.get(num);
+					if (DBSynConstans.timeDown.equals(transferOneBean.getType())
 							&& !"".equals(transferOneBean.getSrcColumn())
-							&& !Constans.defaultJComboBoxText.equals(transferOneBean.getDestTimeYMDFormat())) {
+							&& !DBSynConstans.defaultJComboBoxText.equals(transferOneBean.getDestTimeYMDFormat())) {
 						destDownYMDJComboBox.setSelectedItem(transferOneBean.getDestColumn());
 						destDownYMDFormatJComboBox.setSelectedItem(transferOneBean.getDestTimeYMDFormat());
 					}
-					TransferBean transferTwoBean = Constans.timeDownList.get(++num);
-					if (Constans.timeDown.equals(transferTwoBean.getType())
+					TransferBean transferTwoBean = DBSynConstans.timeDownList.get(++num);
+					if (DBSynConstans.timeDown.equals(transferTwoBean.getType())
 							&& !"".equals(transferTwoBean.getSrcColumn())
-							&& !Constans.defaultJComboBoxText.equals(transferTwoBean.getDestTimeHMSFormat())) {
+							&& !DBSynConstans.defaultJComboBoxText.equals(transferTwoBean.getDestTimeHMSFormat())) {
 						destDownHMSJComboBox.setSelectedItem(transferTwoBean.getDestColumn());
 						destDownHMSFormatJComboBox.setSelectedItem(transferTwoBean.getDestTimeHMSFormat());
 					}
@@ -471,7 +472,7 @@ public class TimeSettingPanel extends JPanel {
 
 	public void save() {
 		try {
-			SystemConfigUtil systemConfigUtil = new SystemConfigUtil(Constans.mainproperty);
+			SystemConfigUtil systemConfigUtil = new SystemConfigUtil(DBSynConstans.mainproperty);
 			String timeUp_folder = systemConfigUtil.get("timeUp.folder");
 			File timeUp_file = new File(timeUp_folder);
 			if (timeUp_file.exists()) {
@@ -533,7 +534,7 @@ public class TimeSettingPanel extends JPanel {
 				}
 				fwDown.flush();
 				fwDown.close();
-				CommonUtil.encrypt(timeDown_folder, Constans.edit_pw);
+				CommonUtil.encrypt(timeDown_folder, DBSynConstans.edit_pw);
 			} else {
 
 			}

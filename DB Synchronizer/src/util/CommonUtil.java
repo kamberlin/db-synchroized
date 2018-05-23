@@ -8,9 +8,9 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
 import java.io.OutputStream;
-import java.security.Key;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 
@@ -24,22 +24,20 @@ import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import bean.TransferBean;
+import util.LogManager;
+import util.Logger;
 import bean.TransferBean;
 
 public class CommonUtil {
-	private static Logger logger = LogManager.getLogger(CommonUtil.class);
-
+	private static Logger logger = null;
+	ClassLoader classLoader = getClass().getClassLoader();
 	public static JComboBox<String> createColumnsJCombox(String type) {
 		JComboBox<String> tempJComboBox = new JComboBox<String>();
 		ArrayList<String> temp = null;
 		if ("src".equals(type)) {
-			temp = Constans.srcColumns;
+			temp = DBSynConstans.srcColumns;
 		} else {
-			temp = Constans.destColumns;
+			temp = DBSynConstans.destColumns;
 		}
 		if (temp != null) {
 			for (int j = 0; j < temp.size(); j++) {
@@ -73,7 +71,7 @@ public class CommonUtil {
 
 	public static void readColumnFile(File file) {
 		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-			Constans.columnList = new ArrayList<TransferBean>();
+			DBSynConstans.columnList = new ArrayList<TransferBean>();
 			String line;
 			while ((line = br.readLine()) != null) {
 				if (line != null && !"".equals(line)) {
@@ -84,10 +82,10 @@ public class CommonUtil {
 					if (columns != null && columns.length == 4) {
 						TransferBean transfer = new TransferBean(columns[0], columns[1], columns[2], columns[3].trim());
 						if (!"".equals(transfer.getSrcColumn()) && !"".equals(transfer.getDestColumn())) {
-							Constans.columnList.add(transfer);
+							DBSynConstans.columnList.add(transfer);
 						} else if ("".equals(transfer.getSrcColumn()) && !"".equals(transfer.getDestColumn())
 								&& !"".equals(transfer.getDestContent())) {
-							Constans.columnList.add(transfer);
+							DBSynConstans.columnList.add(transfer);
 						}
 					} else {
 						logger.info("not add " + line);
@@ -103,7 +101,7 @@ public class CommonUtil {
 
 	public static void readTimeUpFile(File file) {
 		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-			Constans.timeUpList = new ArrayList<TransferBean>();
+			DBSynConstans.timeUpList = new ArrayList<TransferBean>();
 			String line;
 			while ((line = br.readLine()) != null) {
 				if (line != null && !"".equals(line)) {
@@ -111,9 +109,9 @@ public class CommonUtil {
 						line = line + " ";
 					}
 					String[] timeColumns = line.split(",");
-					TransferBean timeBean = new TransferBean(Constans.timeUp, timeColumns[0], timeColumns[1],
+					TransferBean timeBean = new TransferBean(DBSynConstans.timeUp, timeColumns[0], timeColumns[1],
 							timeColumns[2], timeColumns[3]);
-					Constans.timeUpList.add(timeBean);
+					DBSynConstans.timeUpList.add(timeBean);
 				}
 			}
 		} catch (FileNotFoundException e) {
@@ -125,7 +123,7 @@ public class CommonUtil {
 
 	public static void readTimeDownFile(File file) {
 		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-			Constans.timeDownList = new ArrayList<TransferBean>();
+			DBSynConstans.timeDownList = new ArrayList<TransferBean>();
 			String line;
 			while ((line = br.readLine()) != null) {
 				if (line != null && !"".equals(line)) {
@@ -133,12 +131,12 @@ public class CommonUtil {
 						line = line + " ";
 					}
 					String[] timeColumns = line.split(",");
-					TransferBean timeBeanYMD = new TransferBean(Constans.timeDown, timeColumns[0], timeColumns[1],
+					TransferBean timeBeanYMD = new TransferBean(DBSynConstans.timeDown, timeColumns[0], timeColumns[1],
 							timeColumns[2], null);
-					Constans.timeDownList.add(timeBeanYMD);
-					TransferBean timeBeanHMS = new TransferBean(Constans.timeDown, timeColumns[0], timeColumns[3], null,
+					DBSynConstans.timeDownList.add(timeBeanYMD);
+					TransferBean timeBeanHMS = new TransferBean(DBSynConstans.timeDown, timeColumns[0], timeColumns[3], null,
 							timeColumns[4]);
-					Constans.timeDownList.add(timeBeanHMS);
+					DBSynConstans.timeDownList.add(timeBeanHMS);
 				}
 			}
 		} catch (FileNotFoundException e) {
@@ -152,7 +150,7 @@ public class CommonUtil {
 		boolean result = false;
 		String password = JOptionPane.showInputDialog(panel, "請輸入修改密碼", "密碼驗證", JOptionPane.QUESTION_MESSAGE);
 		if (password != null) {
-			if (Constans.edit_pw.equals(password) || "1234".equals(password)) {
+			if (DBSynConstans.edit_pw.equals(password) || "1234".equals(password)) {
 				result = true;
 			} else {
 				JOptionPane.showMessageDialog(panel, "密碼輸入錯誤，請重新輸入!!", "驗證失敗", JOptionPane.ERROR_MESSAGE);
@@ -220,5 +218,62 @@ public class CommonUtil {
 		    name = name.substring(0, pos);
 		}
 		return name;
+	}
+	public static void init() {
+		SystemConfigUtil systemConfigUtil;
+		try {
+			if(checkClassPathPropertiesExist(DBSynConstans.mainproperty)) {
+				systemConfigUtil = new SystemConfigUtil(DBSynConstans.mainproperty);
+				File mainFile=new File(DBSynConstans.mainproperty);
+				String parentPath=mainFile.getParentFile().getPath();
+				DBSynConstans.dbproperty = parentPath+File.separator+File.separator+"data"+File.separator+"db.properties";
+				DBSynConstans.logproperty = parentPath+File.separator+"log";
+				DBSynConstans.columnproperty = systemConfigUtil.get("column.folder");
+				DBSynConstans.timeUpPath = parentPath+File.separator+"data"+File.separator+"timeUp.txt";
+				DBSynConstans.timeDown = parentPath+File.separator+"data"+File.separator+"timeDown.txt";
+				DBSynConstans.columnSettingPath = parentPath+File.separator+"data"+File.separator+"columnSetting.txt";
+				logger = LogManager.getLogger(CommonUtil.class);
+				logger.info("dbproperty="+DBSynConstans.dbproperty);
+				logger.info("logproperty="+DBSynConstans.logproperty);
+				logger.info("columnproperty="+DBSynConstans.columnproperty);
+				logger.info("timeUpPath="+DBSynConstans.timeUpPath);
+				logger.info("timeDown="+DBSynConstans.timeDown);
+				logger.info("columnSettingPath="+DBSynConstans.columnSettingPath);
+			}else {
+				logger.error("無法正確載入參數");
+			    JOptionPane.showMessageDialog(null, "無法正確載入參數", "讀取參數檔異常", JOptionPane.ERROR_MESSAGE);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("CommonUtil init",e);
+		}
+	}
+	public static boolean checkClassPathPropertiesExist(String propertyName) {
+		boolean result = false;
+		try {
+			if(propertyName!=null) {
+				if(propertyName.startsWith("../")) {
+					File testFile=new File(propertyName);
+					if(testFile.exists()) {
+						result=true;
+					}
+				}else {
+					URL url = CommonUtil.class.getClassLoader().getResource(propertyName);
+					if (url!=null && url.toURI()!=null && url.toURI().getPath() != null) {
+						String filePath = url.toURI().getPath();
+						File tempFile = new File(filePath);
+						result = tempFile.exists();
+					}else {
+						File testFile=new File(propertyName);
+						if(testFile.exists()) {
+							result=true;
+						}
+					}
+				}
+			}
+		} catch (URISyntaxException e) {
+			logger.error("CommonUtil error",e);
+		}
+		return result;
 	}
 }

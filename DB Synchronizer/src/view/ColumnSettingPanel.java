@@ -6,11 +6,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import util.LogManager;
+import util.Logger;
 import util.CommonUtil;
-import util.Constans;
+import util.DBSynConstans;
 import util.DBUtil;
 import util.SystemConfigUtil;
 
@@ -20,7 +19,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
-import java.awt.Font;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import javax.swing.JButton;
@@ -54,9 +53,6 @@ public class ColumnSettingPanel extends JPanel {
 	GridBagLayout gbl_dest_layout = null;
 	GridBagLayout gbl_src_layout = null;
 
-	Font titleFont = new Font("微軟正黑體", Font.PLAIN, 24);
-	Font textFont = new Font("微軟正黑體", Font.PLAIN, 18);
-
 	/**
 	 * Create the panel.
 	 */
@@ -69,7 +65,7 @@ public class ColumnSettingPanel extends JPanel {
 		destScrollPanel = new JScrollPane();
 
 		TitledBorder tb_src = new TitledBorder("來源欄位設定");
-		tb_src.setTitleFont(titleFont);
+		tb_src.setTitleFont(DBSynConstans.titleFont);
 		tb_src.setTitleJustification(TitledBorder.LEFT);
 
 		src_panel = new JPanel();
@@ -79,11 +75,11 @@ public class ColumnSettingPanel extends JPanel {
 		src_panel.setLayout(gbl_src_layout);
 
 		JLabel src_noLabel = new JLabel("項次");
-		src_noLabel.setFont(titleFont);
+		src_noLabel.setFont(DBSynConstans.titleFont);
 		JLabel src_columnLabel = new JLabel("欄位名稱");
-		src_columnLabel.setFont(titleFont);
+		src_columnLabel.setFont(DBSynConstans.titleFont);
 		JLabel src_inputLabel = new JLabel("自訂寫入值");
-		src_inputLabel.setFont(titleFont);
+		src_inputLabel.setFont(DBSynConstans.titleFont);
 		src_panel.add(src_noLabel);
 		src_panel.add(src_columnLabel);
 		src_panel.add(src_inputLabel);
@@ -110,7 +106,7 @@ public class ColumnSettingPanel extends JPanel {
 
 		srcScrollPanel.setViewportView(src_panel);
 		TitledBorder tb_dest = new TitledBorder("目標欄位設定");
-		tb_dest.setTitleFont(titleFont);
+		tb_dest.setTitleFont(DBSynConstans.titleFont);
 		tb_dest.setTitleJustification(TitledBorder.LEFT);
 		dest_panel = new JPanel();
 		dest_panel.setBorder(tb_dest);
@@ -118,11 +114,11 @@ public class ColumnSettingPanel extends JPanel {
 		dest_panel.setLayout(gbl_dest_layout);
 
 		JLabel dest_noLabel = new JLabel("項次");
-		dest_noLabel.setFont(titleFont);
+		dest_noLabel.setFont(DBSynConstans.titleFont);
 		JLabel dest_columnLabel = new JLabel("欄位名稱");
-		dest_columnLabel.setFont(titleFont);
+		dest_columnLabel.setFont(DBSynConstans.titleFont);
 		JLabel dest_inputLabel = new JLabel("自訂寫入值");
-		dest_inputLabel.setFont(titleFont);
+		dest_inputLabel.setFont(DBSynConstans.titleFont);
 
 		dest_panel.add(dest_noLabel);
 		dest_panel.add(dest_columnLabel);
@@ -171,13 +167,14 @@ public class ColumnSettingPanel extends JPanel {
 		add(destScrollPanel, gbc_destScrollPanel);
 
 		edit_Btn = new JButton("修改設定");
-		edit_Btn.setFont(textFont);
+		edit_Btn.setPreferredSize(new Dimension(300, 100));
+		edit_Btn.setFont(DBSynConstans.textFont);
 		GridBagConstraints gbc_btnPanel = new GridBagConstraints();
 		gbc_btnPanel.insets = new Insets(0, 0, 5, 5);
 		gbc_btnPanel.gridx = 2;
 		gbc_btnPanel.gridy = 0;
 		gbc_btnPanel.gridwidth = 1;
-		gbc_btnPanel.weightx = 1;
+		gbc_btnPanel.weightx = 0.2;
 		gbc_btnPanel.weighty = 1;
 		gbc_btnPanel.fill = GridBagConstraints.NONE;
 		gbc_btnPanel.anchor = GridBagConstraints.NORTH;
@@ -207,28 +204,29 @@ public class ColumnSettingPanel extends JPanel {
 
 	public boolean getDestColumnsFromDB() {
 		boolean result = false;
-		if (DBUtil.checkAllNotEmpty(Constans.destDBInfo)) {
-			logger.info("正常");
-			if (Constans.destColumns == null || Constans.destColumns.size() == 0) {
+		if (DBUtil.checkAllNotEmpty(DBSynConstans.destDBInfo)) {
+			if (DBSynConstans.destColumns == null || DBSynConstans.destColumns.size() == 0) {
 				DBUtil.getDestColumnsFromDB();
-				if (Constans.destColumns == null || Constans.destColumns.size() == 0) {
+				if (DBSynConstans.destColumns == null || DBSynConstans.destColumns.size() == 0) {
 					JOptionPane.showMessageDialog(this, "目標資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
+					logger.info("目標資料庫設定不正確，請檢查資料庫設定");
 				}
 			}
 		} else {
 			JOptionPane.showMessageDialog(this, "目標資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
+			logger.info("目標資料庫設定不正確，請檢查資料庫設定");
 		}
 		return result;
 	}
 
 	public void setColumnLength() {
 		int columnLength = 0;
-		if (Constans.srcColumns != null) {
-			columnLength = Constans.srcColumns.size();
+		if (DBSynConstans.srcColumns != null) {
+			columnLength = DBSynConstans.srcColumns.size();
 		}
-		if (Constans.destColumns != null) {
-			if (columnLength < Constans.destColumns.size()) {
-				columnLength = Constans.destColumns.size();
+		if (DBSynConstans.destColumns != null) {
+			if (columnLength < DBSynConstans.destColumns.size()) {
+				columnLength = DBSynConstans.destColumns.size();
 			}
 		}
 		this.columnLength = columnLength;
@@ -236,17 +234,19 @@ public class ColumnSettingPanel extends JPanel {
 
 	public void genSrcColumn() {
 		try {
-			if (Constans.srcColumns != null) {
-				SystemConfigUtil systemConfigUtil = new SystemConfigUtil(Constans.mainproperty);
+			if (DBSynConstans.srcColumns != null) {
+				SystemConfigUtil systemConfigUtil = new SystemConfigUtil(DBSynConstans.mainproperty);
 				//加密檔案
 				String column_folder = systemConfigUtil.get("column_setting.folder");
-				File column_file = new File(column_folder);
+				File column_file = new File(DBSynConstans.columnSettingPath);
 				//解密檔案
 				File columnDecode = new File(column_file.getParent() + File.separator+CommonUtil.getFileNameWithOutExtension(column_file) + "_decode.txt");
-				CommonUtil.decrypt(column_file.getPath(), Constans.edit_pw);
-				if (columnDecode.exists()) {
-					CommonUtil.readColumnFile(columnDecode);
-					columnDecode.delete();
+				if(column_file.exists()) {
+					CommonUtil.decrypt(column_file.getPath(), DBSynConstans.edit_pw);
+					if (columnDecode.exists()) {
+						CommonUtil.readColumnFile(columnDecode);
+						columnDecode.delete();
+					}
 				}
 				for (int i = 0; i < columnLength; i++) {
 					if (srcJComboxs == null) {
@@ -256,24 +256,24 @@ public class ColumnSettingPanel extends JPanel {
 						srcJTextField = new ArrayList<JTextField>();
 					}
 					JComboBox<String> tempJComboBox = new JComboBox<String>();
-					tempJComboBox.setFont(textFont);
+					tempJComboBox.setFont(DBSynConstans.textFont);
 					JTextField textField = new JTextField();
-					textField.setFont(textFont);
+					textField.setFont(DBSynConstans.textFont);
 					textField.setColumns(10);
-					for (int j = 0; j < Constans.srcColumns.size(); j++) {
+					for (int j = 0; j < DBSynConstans.srcColumns.size(); j++) {
 						if (j == 0) {
 							tempJComboBox.addItem("");
 						}
-						tempJComboBox.addItem(Constans.srcColumns.get(j));
+						tempJComboBox.addItem(DBSynConstans.srcColumns.get(j));
 					}
-					if(Constans.columnList!=null && i<Constans.columnList.size() &&  Constans.columnList.get(i)!=null) {
-						tempJComboBox.setSelectedItem(Constans.columnList.get(i).getSrcColumn());
-						textField.setText(Constans.columnList.get(i).getSrcContent());
+					if(DBSynConstans.columnList!=null && i<DBSynConstans.columnList.size() &&  DBSynConstans.columnList.get(i)!=null) {
+						tempJComboBox.setSelectedItem(DBSynConstans.columnList.get(i).getSrcColumn());
+						textField.setText(DBSynConstans.columnList.get(i).getSrcContent());
 					}
 					tempJComboBox.setEnabled(false);
 					textField.setEditable(false);
 					JLabel noLabel = new JLabel("" + (i + 1));
-					noLabel.setFont(textFont);
+					noLabel.setFont(DBSynConstans.textFont);
 					srcJComboxs.add(tempJComboBox);
 					srcJTextField.add(textField);
 					src_panel.add(noLabel);
@@ -309,7 +309,7 @@ public class ColumnSettingPanel extends JPanel {
 	}
 
 	public void genDestColumn() {
-		if (Constans.destColumns != null) {
+		if (DBSynConstans.destColumns != null) {
 			for (int i = 0; i < columnLength; i++) {
 				if (destJComboxs == null) {
 					destJComboxs = new ArrayList<JComboBox<String>>();
@@ -318,24 +318,24 @@ public class ColumnSettingPanel extends JPanel {
 					destJTextField = new ArrayList<JTextField>();
 				}
 				JComboBox<String> tempJComboBox = new JComboBox<String>();
-				tempJComboBox.setFont(textFont);
+				tempJComboBox.setFont(DBSynConstans.textFont);
 				JTextField textField = new JTextField();
-				textField.setFont(textFont);
+				textField.setFont(DBSynConstans.textFont);
 				textField.setColumns(10);
-				for (int j = 0; j < Constans.destColumns.size(); j++) {
+				for (int j = 0; j < DBSynConstans.destColumns.size(); j++) {
 					if (j == 0) {
 						tempJComboBox.addItem("");
 					}
-					tempJComboBox.addItem(Constans.destColumns.get(j));
+					tempJComboBox.addItem(DBSynConstans.destColumns.get(j));
 				}
-				if(Constans.columnList!=null && i<Constans.columnList.size() && Constans.columnList.get(i)!=null) {
-					tempJComboBox.setSelectedItem(Constans.columnList.get(i).getDestColumn());
-					textField.setText(Constans.columnList.get(i).getDestContent());
+				if(DBSynConstans.columnList!=null && i<DBSynConstans.columnList.size() && DBSynConstans.columnList.get(i)!=null) {
+					tempJComboBox.setSelectedItem(DBSynConstans.columnList.get(i).getDestColumn());
+					textField.setText(DBSynConstans.columnList.get(i).getDestContent());
 				}
 				tempJComboBox.setEnabled(false);
 				textField.setEditable(false);
 				JLabel noLabel = new JLabel("" + (i + 1));
-				noLabel.setFont(textFont);
+				noLabel.setFont(DBSynConstans.textFont);
 				destJComboxs.add(tempJComboBox);
 				destJTextField.add(textField);
 				dest_panel.add(noLabel);
@@ -371,7 +371,7 @@ public class ColumnSettingPanel extends JPanel {
 	public void save() {
 		if (srcJComboxs != null && destJTextField != null && destJComboxs != null && destJTextField != null) {
 			try {
-				SystemConfigUtil systemConfigUtil = new SystemConfigUtil(Constans.mainproperty);
+				SystemConfigUtil systemConfigUtil = new SystemConfigUtil(DBSynConstans.mainproperty);
 				String column_folder = systemConfigUtil.get("column_setting.folder");
 				File column_file = new File(column_folder);
 				if (column_file.exists()) {
@@ -405,7 +405,7 @@ public class ColumnSettingPanel extends JPanel {
 				}
 				fw.flush();
 				fw.close();
-				CommonUtil.encrypt(column_folder, Constans.edit_pw);
+				CommonUtil.encrypt(column_folder, DBSynConstans.edit_pw);
 			} catch (Exception e) {
 				logger.error("ColumnSetting error",e);
 			}

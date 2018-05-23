@@ -5,9 +5,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import util.LogManager;
+import util.Logger;
 import bean.DestDBInfo;
 import bean.SrcDBInfo;
 import dao.DAOSQL;
@@ -102,23 +101,51 @@ public class DBUtil {
 	}
 
 	public static void getDestColumnsFromDB() {
-		if (Constans.destDBInfo != null) {
+		if (DBSynConstans.destDBInfo != null) {
 			try {
-				DAOSQL daoSQL = getDBConnection(Constans.destDBInfo);
+				DAOSQL daoSQL = getDBConnection(DBSynConstans.destDBInfo);
 				PreparedStatement ps = null;
-				if ("Oracle".equals(Constans.destDBInfo.getType())) {
-					ps = daoSQL.prepareStatement(Constans.getOracleColumns);
-					ps.setString(1, Constans.destDBInfo.getUsername());
-					ps.setString(2, Constans.destDBInfo.getTableName());
+				if ("Oracle".equals(DBSynConstans.destDBInfo.getType())) {
+					ps = daoSQL.prepareStatement(DBSynConstans.getOracleColumns);
+					ps.setString(1, DBSynConstans.destDBInfo.getUsername());
+					ps.setString(2, DBSynConstans.destDBInfo.getTableName());
 				} else {
-					ps = daoSQL.prepareStatement(Constans.getSQLServerColumns);
-					logger.info("tableName="+Constans.destDBInfo.getTableName());
-					ps.setString(1, Constans.destDBInfo.getTableName());
+					ps = daoSQL.prepareStatement(DBSynConstans.getSQLServerColumns);
+					ps.setString(1, DBSynConstans.destDBInfo.getTableName());
 				}
 				ResultSet rs = ps.executeQuery();
-				Constans.destColumns = new ArrayList<String>();
+				DBSynConstans.destColumns = new ArrayList<String>();
 				while (rs.next()) {
-					Constans.destColumns.add(rs.getString("COLUMN_NAME"));
+					DBSynConstans.destColumns.add(rs.getString("COLUMN_NAME"));
+				}
+				daoSQL.close();
+			}
+			catch(SQLException se) {
+				logger.error("DBUtil error",se);
+				logger.info("errorcode="+se.getErrorCode());
+			}
+			catch (Exception e) {
+				logger.error("DBUtil error",e);
+			}
+		}
+	}
+	public static void getSrcColumnsFromDB() {
+		if (DBSynConstans.srcDBInfo != null) {
+			try {
+				DAOSQL daoSQL = getDBConnection(DBSynConstans.srcDBInfo);
+				PreparedStatement ps = null;
+				if ("Oracle".equals(DBSynConstans.srcDBInfo.getType())) {
+					ps = daoSQL.prepareStatement(DBSynConstans.getOracleColumns);
+					ps.setString(1, DBSynConstans.srcDBInfo.getUsername());
+					ps.setString(2, DBSynConstans.srcDBInfo.getTableName());
+				} else {
+					ps = daoSQL.prepareStatement(DBSynConstans.getSQLServerColumns);
+					ps.setString(1, DBSynConstans.srcDBInfo.getTableName());
+				}
+				ResultSet rs = ps.executeQuery();
+				DBSynConstans.srcColumns = new ArrayList<String>();
+				while (rs.next()) {
+					DBSynConstans.srcColumns.add(rs.getString("COLUMN_NAME"));
 				}
 				daoSQL.close();
 			}

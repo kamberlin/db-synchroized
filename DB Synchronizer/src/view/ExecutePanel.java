@@ -13,23 +13,20 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.TitledBorder;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import util.LogManager;
+import util.Logger;
 import layout.TableLayout;
 import util.CommonUtil;
-import util.Constans;
+import util.DBSynConstans;
 import util.SystemConfigUtil;
 import util.TransferThread;
+
 
 public class ExecutePanel extends JPanel {
 	boolean running = false;
 	private static Logger logger = LogManager.getLogger(ExecutePanel.class);
 	TransferThread transferThread = null;
 
-	Font titleFont = new Font("微軟正黑體", Font.PLAIN, 24);
-	Font textFont = new Font("微軟正黑體", Font.PLAIN, 18);
 	/**
 	 * 
 	 */
@@ -47,17 +44,17 @@ public class ExecutePanel extends JPanel {
 		JPanel upPanel = new JPanel();
 		upPanel.setLayout(new TableLayout(sizeUp));
 		TitledBorder tb = new TitledBorder("服務控制列");
-		tb.setTitleFont(titleFont);
+		tb.setTitleFont(DBSynConstans.titleFont);
 		tb.setTitleJustification(TitledBorder.LEFT);
 		upPanel.setBorder(tb);
 		JLabel statusTitleLabel = new JLabel("服務狀態:");
-		statusTitleLabel.setFont(titleFont);
+		statusTitleLabel.setFont(DBSynConstans.titleFont);
 		JLabel statusTextLabel = new JLabel("服務執行中!");
-		statusTextLabel.setFont(titleFont);
+		statusTextLabel.setFont(DBSynConstans.titleFont);
 		JButton startBtn = new JButton("啟動服務");
-		startBtn.setFont(titleFont);
+		startBtn.setFont(DBSynConstans.titleFont);
 		JButton stopBtn = new JButton("停止服務");
-		stopBtn.setFont(titleFont);
+		stopBtn.setFont(DBSynConstans.titleFont);
 		upPanel.add(statusTitleLabel, "0,0");
 		upPanel.add(statusTextLabel, "1,0");
 		upPanel.add(startBtn, "2,0");
@@ -65,7 +62,7 @@ public class ExecutePanel extends JPanel {
 		JPanel downPanel = new JPanel();
 		downPanel.setLayout(new GridLayout());
 		JTextArea textArea = new JTextArea();
-		textArea.setFont(textFont);
+		textArea.setFont(DBSynConstans.textFont);
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setPreferredSize(new Dimension(400, 300));
 		scrollPane.setViewportView(textArea);
@@ -107,7 +104,7 @@ public class ExecutePanel extends JPanel {
 
 	public void loadColumnSetting() {
 		try {
-			SystemConfigUtil systemConfigUtil = new SystemConfigUtil(Constans.mainproperty);
+			SystemConfigUtil systemConfigUtil = new SystemConfigUtil(DBSynConstans.mainproperty);
 			String column_folder = systemConfigUtil.get("column_setting.folder");
 			String timeUp_folder = systemConfigUtil.get("timeUp.folder");
 			String timeDown_folder = systemConfigUtil.get("timeDown.folder");
@@ -116,11 +113,11 @@ public class ExecutePanel extends JPanel {
 			File timeDown_file = new File(timeDown_folder);
 			//解密檔案
 			File columnDecode = new File(column_file.getParent() + File.separator+CommonUtil.getFileNameWithOutExtension(column_file) + "_decode.txt");
-			CommonUtil.decrypt(column_file.getPath(), Constans.edit_pw);
+			CommonUtil.decrypt(column_file.getPath(), DBSynConstans.edit_pw);
 			File timeUpDecode = new File(timeUp_file.getParent() + File.separator+CommonUtil.getFileNameWithOutExtension(timeUp_file) + "_decode.txt");
 			File timeDownDecode = new File(timeDown_file.getParent() + File.separator+CommonUtil.getFileNameWithOutExtension(timeDown_file) + "_decode.txt");
-			CommonUtil.decrypt(timeUp_file.getPath(), Constans.edit_pw);
-			CommonUtil.decrypt(timeDown_file.getPath(), Constans.edit_pw);
+			CommonUtil.decrypt(timeUp_file.getPath(), DBSynConstans.edit_pw);
+			CommonUtil.decrypt(timeDown_file.getPath(), DBSynConstans.edit_pw);
 			int fileCount = 0;
 			if (columnDecode.exists()) {
 				CommonUtil.readColumnFile(columnDecode);
@@ -144,7 +141,7 @@ public class ExecutePanel extends JPanel {
 			}
 
 		} catch (Exception e) {
-			logger.info("ExecutePanel error",e);
+			logger.error("ExecutePanel error",e);
 		}
 	}
 

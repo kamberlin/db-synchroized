@@ -2,9 +2,8 @@ package dao;
 
 import java.sql.*;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import util.LogManager;
+import util.Logger;
 
 public class DAOSQL {
 	private static Logger logger = LogManager.getLogger(DAOSQL.class);
