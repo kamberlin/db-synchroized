@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import javax.swing.JButton;
@@ -47,6 +48,7 @@ public class ColumnSettingPanel extends JPanel {
 
 	JPanel src_panel = null;
 	JPanel dest_panel = null;
+	JPanel main_panel=null;
 	JScrollPane srcScrollPanel = null;
 	JScrollPane destScrollPanel = null;
 
@@ -63,6 +65,9 @@ public class ColumnSettingPanel extends JPanel {
 
 		srcScrollPanel = new JScrollPane();
 		destScrollPanel = new JScrollPane();
+		
+		main_panel=new JPanel();
+		main_panel.setLayout(new FlowLayout());
 
 		TitledBorder tb_src = new TitledBorder("來源欄位設定");
 		tb_src.setTitleFont(DBSynConstans.titleFont);
@@ -104,7 +109,8 @@ public class ColumnSettingPanel extends JPanel {
 		src_const.weighty = 0;
 		gbl_src_layout.setConstraints(src_inputLabel, src_const);
 
-		srcScrollPanel.setViewportView(src_panel);
+		main_panel.add(src_panel);
+		
 		TitledBorder tb_dest = new TitledBorder("目標欄位設定");
 		tb_dest.setTitleFont(DBSynConstans.titleFont);
 		tb_dest.setTitleJustification(TitledBorder.LEFT);
@@ -152,20 +158,10 @@ public class ColumnSettingPanel extends JPanel {
 		gbc_srcScrollPanel.weighty = 1;
 		gbc_srcScrollPanel.fill = GridBagConstraints.BOTH;
 		gbc_srcScrollPanel.anchor = GridBagConstraints.NORTH;
-		add(srcScrollPanel, gbc_srcScrollPanel);
 
-		destScrollPanel.setViewportView(dest_panel);
-		GridBagConstraints gbc_destScrollPanel = new GridBagConstraints();
-		gbc_destScrollPanel.insets = new Insets(0, 0, 5, 5);
-		gbc_destScrollPanel.gridx = 1;
-		gbc_destScrollPanel.gridy = 0;
-		gbc_destScrollPanel.gridwidth = 1;
-		gbc_destScrollPanel.weightx = 2;
-		gbc_destScrollPanel.weighty = 1;
-		gbc_destScrollPanel.fill = GridBagConstraints.BOTH;
-		gbc_destScrollPanel.anchor = GridBagConstraints.NORTH;
-		add(destScrollPanel, gbc_destScrollPanel);
-
+        main_panel.add(dest_panel);
+        srcScrollPanel.setViewportView(main_panel);
+        add(srcScrollPanel, gbc_srcScrollPanel);
 		edit_Btn = new JButton("修改設定");
 		edit_Btn.setPreferredSize(new Dimension(300, 100));
 		edit_Btn.setFont(DBSynConstans.textFont);
@@ -235,9 +231,7 @@ public class ColumnSettingPanel extends JPanel {
 	public void genSrcColumn() {
 		try {
 			if (DBSynConstans.srcColumns != null) {
-				SystemConfigUtil systemConfigUtil = new SystemConfigUtil(DBSynConstans.mainproperty);
 				//加密檔案
-				String column_folder = systemConfigUtil.get("column_setting.folder");
 				File column_file = new File(DBSynConstans.columnSettingPath);
 				//解密檔案
 				File columnDecode = new File(column_file.getParent() + File.separator+CommonUtil.getFileNameWithOutExtension(column_file) + "_decode.txt");
@@ -249,7 +243,7 @@ public class ColumnSettingPanel extends JPanel {
 					}
 				}
 				for (int i = 0; i < columnLength; i++) {
-					if (srcJComboxs == null) {
+					if(srcJComboxs ==null) {
 						srcJComboxs = new ArrayList<JComboBox<String>>();
 					}
 					if (srcJTextField == null) {
@@ -274,8 +268,16 @@ public class ColumnSettingPanel extends JPanel {
 					textField.setEditable(false);
 					JLabel noLabel = new JLabel("" + (i + 1));
 					noLabel.setFont(DBSynConstans.textFont);
-					srcJComboxs.add(tempJComboBox);
-					srcJTextField.add(textField);
+					if(i<srcJComboxs.size() && srcJComboxs.get(i)!=null) {
+						srcJComboxs.set(i,tempJComboBox);
+					}else {
+						srcJComboxs.add(tempJComboBox);
+					}
+					if(i<srcJTextField.size() && srcJTextField.get(i)!=null) {
+						srcJTextField.set(i,textField);
+					}else {
+						srcJTextField.add(textField);
+					}
 					src_panel.add(noLabel);
 					GridBagConstraints src_const = new GridBagConstraints();
 					src_const.insets = new Insets(1, 3, 1, 3);
@@ -311,10 +313,10 @@ public class ColumnSettingPanel extends JPanel {
 	public void genDestColumn() {
 		if (DBSynConstans.destColumns != null) {
 			for (int i = 0; i < columnLength; i++) {
-				if (destJComboxs == null) {
+				if(destJComboxs==null) {
 					destJComboxs = new ArrayList<JComboBox<String>>();
 				}
-				if (destJTextField == null) {
+				if(destJTextField ==null) {
 					destJTextField = new ArrayList<JTextField>();
 				}
 				JComboBox<String> tempJComboBox = new JComboBox<String>();
@@ -336,8 +338,16 @@ public class ColumnSettingPanel extends JPanel {
 				textField.setEditable(false);
 				JLabel noLabel = new JLabel("" + (i + 1));
 				noLabel.setFont(DBSynConstans.textFont);
-				destJComboxs.add(tempJComboBox);
-				destJTextField.add(textField);
+				if(i<destJComboxs.size() && destJComboxs.get(i)!=null) {
+					destJComboxs.set(i,tempJComboBox);
+				}else {
+					destJComboxs.add(tempJComboBox);
+				}
+				if(i<destJTextField.size() && destJTextField.get(i)!=null) {
+					destJTextField.set(i,textField);
+				}else {
+					destJTextField.add(textField);
+				}
 				dest_panel.add(noLabel);
 				dest_panel.add(tempJComboBox);
 				dest_panel.add(textField);
@@ -367,18 +377,37 @@ public class ColumnSettingPanel extends JPanel {
 		}
 
 	}
+	public void refreshSrcColumn() {
+		for(int i=0;i<srcJComboxs.size();i++) {
+			
+		}
+	}
+	public void refreshDestColumn() {
+		for(int i=0;i<destJComboxs.size();i++) {
+			
+		}
+	}
+	public void refreshSrcContent() {
+		for(int i=0;i<srcJComboxs.size();i++) {
+			
+		}
+	}
+	public void refreshDestContent() {
+		for(int i=0;i<destJComboxs.size();i++) {
+			
+		}
+	}
 
 	public void save() {
 		if (srcJComboxs != null && destJTextField != null && destJComboxs != null && destJTextField != null) {
 			try {
-				SystemConfigUtil systemConfigUtil = new SystemConfigUtil(DBSynConstans.mainproperty);
-				String column_folder = systemConfigUtil.get("column_setting.folder");
-				File column_file = new File(column_folder);
+				File column_file = new File(DBSynConstans.columnSettingPath);
 				if (column_file.exists()) {
 					column_file.delete();
 				}
 				FileWriter fw = new FileWriter(column_file);
 				String sign = ",";
+				logger.info("srcComboBox length="+srcJComboxs.size());
 				for (int i = 0; i < srcJComboxs.size(); i++) {
 					String srcColumn = null;
 					String destColumn = null;
@@ -405,7 +434,7 @@ public class ColumnSettingPanel extends JPanel {
 				}
 				fw.flush();
 				fw.close();
-				CommonUtil.encrypt(column_folder, DBSynConstans.edit_pw);
+				CommonUtil.encrypt(DBSynConstans.columnSettingPath, DBSynConstans.edit_pw);
 			} catch (Exception e) {
 				logger.error("ColumnSetting error",e);
 			}
@@ -482,4 +511,5 @@ public class ColumnSettingPanel extends JPanel {
 			loadData();
 		}
 	}
+
 }
