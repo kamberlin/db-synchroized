@@ -30,7 +30,7 @@ public class SystemConfigUtil {
 				properties.load(input);
 			}
 		} catch (Exception e) {
-			logger.error(propertiesName + " failure!!", e);
+			logger.error("SystemConfigUtil load "+propertiesName + " failure!!", e);
 			throw e;
 		}
 	}
@@ -43,7 +43,7 @@ public class SystemConfigUtil {
 			}
 			input.close();
 		} catch (Exception e) {
-			logger.error(propertyFile.getName() + " failure!!", e);
+			logger.error("SystemConfigUtil load "+propertyFile.getName() + " failure!!", e);
 			throw e;
 		}
 	}
@@ -63,28 +63,19 @@ public class SystemConfigUtil {
 	public void save(String key, String value) {
 		FileOutputStream out;
 		try {
-			File dbFile = new File(DBSynConstans.dbproperty);
-			File decodeDBFile = new File(dbFile.getParent() + File.separator
-					+ CommonUtil.getFileNameWithOutExtension(dbFile) + "_decode.txt");
-			CommonUtil.decrypt(dbFile.getPath(), DBSynConstans.edit_pw);
-			out = new FileOutputStream(decodeDBFile);
+			File dbFile = new File(Constans.dbproperty);
+			out = new FileOutputStream(dbFile);
 			if (properties != null) {
 				properties.setProperty(key, value);
 				properties.store(out, null);
 				out.close();
 			}
-			CommonUtil.encrypt(decodeDBFile.getPath(), DBSynConstans.edit_pw);
-			if (dbFile.exists()) {
-				dbFile.delete();
-			}
-			decodeDBFile.renameTo(dbFile);
-			decodeDBFile.delete();
 		} catch (FileNotFoundException e) {
-			logger.error("SystemConfigUtil error", e);
+			logger.error("SystemConfigUtil save error", e);
 		} catch (IOException e) {
-			logger.error("SystemConfigUtil error", e);
+			logger.error("SystemConfigUtil save error", e);
 		} catch (Exception e) {
-			logger.error("SystemConfigUtil error", e);
+			logger.error("SystemConfigUtil save error", e);
 		}
 	}
 }

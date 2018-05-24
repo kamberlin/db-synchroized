@@ -9,10 +9,8 @@ import javax.swing.border.TitledBorder;
 import util.LogManager;
 import util.Logger;
 import util.CommonUtil;
-import util.DBSynConstans;
+import util.Constans;
 import util.DBUtil;
-import util.SystemConfigUtil;
-
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -70,7 +68,7 @@ public class ColumnSettingPanel extends JPanel {
 		main_panel.setLayout(new FlowLayout());
 
 		TitledBorder tb_src = new TitledBorder("來源欄位設定");
-		tb_src.setTitleFont(DBSynConstans.titleFont);
+		tb_src.setTitleFont(Constans.titleFont);
 		tb_src.setTitleJustification(TitledBorder.LEFT);
 
 		src_panel = new JPanel();
@@ -80,11 +78,11 @@ public class ColumnSettingPanel extends JPanel {
 		src_panel.setLayout(gbl_src_layout);
 
 		JLabel src_noLabel = new JLabel("項次");
-		src_noLabel.setFont(DBSynConstans.titleFont);
+		src_noLabel.setFont(Constans.titleFont);
 		JLabel src_columnLabel = new JLabel("欄位名稱");
-		src_columnLabel.setFont(DBSynConstans.titleFont);
+		src_columnLabel.setFont(Constans.titleFont);
 		JLabel src_inputLabel = new JLabel("自訂寫入值");
-		src_inputLabel.setFont(DBSynConstans.titleFont);
+		src_inputLabel.setFont(Constans.titleFont);
 		src_panel.add(src_noLabel);
 		src_panel.add(src_columnLabel);
 		src_panel.add(src_inputLabel);
@@ -112,7 +110,7 @@ public class ColumnSettingPanel extends JPanel {
 		main_panel.add(src_panel);
 		
 		TitledBorder tb_dest = new TitledBorder("目標欄位設定");
-		tb_dest.setTitleFont(DBSynConstans.titleFont);
+		tb_dest.setTitleFont(Constans.titleFont);
 		tb_dest.setTitleJustification(TitledBorder.LEFT);
 		dest_panel = new JPanel();
 		dest_panel.setBorder(tb_dest);
@@ -120,11 +118,11 @@ public class ColumnSettingPanel extends JPanel {
 		dest_panel.setLayout(gbl_dest_layout);
 
 		JLabel dest_noLabel = new JLabel("項次");
-		dest_noLabel.setFont(DBSynConstans.titleFont);
+		dest_noLabel.setFont(Constans.titleFont);
 		JLabel dest_columnLabel = new JLabel("欄位名稱");
-		dest_columnLabel.setFont(DBSynConstans.titleFont);
+		dest_columnLabel.setFont(Constans.titleFont);
 		JLabel dest_inputLabel = new JLabel("自訂寫入值");
-		dest_inputLabel.setFont(DBSynConstans.titleFont);
+		dest_inputLabel.setFont(Constans.titleFont);
 
 		dest_panel.add(dest_noLabel);
 		dest_panel.add(dest_columnLabel);
@@ -164,7 +162,7 @@ public class ColumnSettingPanel extends JPanel {
         add(srcScrollPanel, gbc_srcScrollPanel);
 		edit_Btn = new JButton("修改設定");
 		edit_Btn.setPreferredSize(new Dimension(300, 100));
-		edit_Btn.setFont(DBSynConstans.textFont);
+		edit_Btn.setFont(Constans.textFont);
 		GridBagConstraints gbc_btnPanel = new GridBagConstraints();
 		gbc_btnPanel.insets = new Insets(0, 0, 5, 5);
 		gbc_btnPanel.gridx = 2;
@@ -200,10 +198,10 @@ public class ColumnSettingPanel extends JPanel {
 
 	public boolean getDestColumnsFromDB() {
 		boolean result = false;
-		if (DBUtil.checkAllNotEmpty(DBSynConstans.destDBInfo)) {
-			if (DBSynConstans.destColumns == null || DBSynConstans.destColumns.size() == 0) {
+		if (DBUtil.checkAllNotEmpty(Constans.destDBInfo)) {
+			if (Constans.destColumns == null || Constans.destColumns.size() == 0) {
 				DBUtil.getDestColumnsFromDB();
-				if (DBSynConstans.destColumns == null || DBSynConstans.destColumns.size() == 0) {
+				if (Constans.destColumns == null || Constans.destColumns.size() == 0) {
 					JOptionPane.showMessageDialog(this, "目標資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
 					logger.info("目標資料庫設定不正確，請檢查資料庫設定");
 				}
@@ -217,12 +215,12 @@ public class ColumnSettingPanel extends JPanel {
 
 	public void setColumnLength() {
 		int columnLength = 0;
-		if (DBSynConstans.srcColumns != null) {
-			columnLength = DBSynConstans.srcColumns.size();
+		if (Constans.srcColumns != null) {
+			columnLength = Constans.srcColumns.size();
 		}
-		if (DBSynConstans.destColumns != null) {
-			if (columnLength < DBSynConstans.destColumns.size()) {
-				columnLength = DBSynConstans.destColumns.size();
+		if (Constans.destColumns != null) {
+			if (columnLength < Constans.destColumns.size()) {
+				columnLength = Constans.destColumns.size();
 			}
 		}
 		this.columnLength = columnLength;
@@ -230,18 +228,19 @@ public class ColumnSettingPanel extends JPanel {
 
 	public void genSrcColumn() {
 		try {
-			if (DBSynConstans.srcColumns != null) {
+			if (Constans.srcColumns != null) {
 				//加密檔案
-				File column_file = new File(DBSynConstans.columnSettingPath);
+				File column_file = new File(Constans.columnSettingPath);
 				//解密檔案
 				File columnDecode = new File(column_file.getParent() + File.separator+CommonUtil.getFileNameWithOutExtension(column_file) + "_decode.txt");
 				if(column_file.exists()) {
-					CommonUtil.decrypt(column_file.getPath(), DBSynConstans.edit_pw);
+					CommonUtil.decrypt(column_file.getPath(), Constans.edit_pw);
 					if (columnDecode.exists()) {
 						CommonUtil.readColumnFile(columnDecode);
 						columnDecode.delete();
 					}
 				}
+				src_panel.removeAll();
 				for (int i = 0; i < columnLength; i++) {
 					if(srcJComboxs ==null) {
 						srcJComboxs = new ArrayList<JComboBox<String>>();
@@ -250,24 +249,24 @@ public class ColumnSettingPanel extends JPanel {
 						srcJTextField = new ArrayList<JTextField>();
 					}
 					JComboBox<String> tempJComboBox = new JComboBox<String>();
-					tempJComboBox.setFont(DBSynConstans.textFont);
+					tempJComboBox.setFont(Constans.textFont);
 					JTextField textField = new JTextField();
-					textField.setFont(DBSynConstans.textFont);
+					textField.setFont(Constans.textFont);
 					textField.setColumns(10);
-					for (int j = 0; j < DBSynConstans.srcColumns.size(); j++) {
+					for (int j = 0; j < Constans.srcColumns.size(); j++) {
 						if (j == 0) {
 							tempJComboBox.addItem("");
 						}
-						tempJComboBox.addItem(DBSynConstans.srcColumns.get(j));
+						tempJComboBox.addItem(Constans.srcColumns.get(j));
 					}
-					if(DBSynConstans.columnList!=null && i<DBSynConstans.columnList.size() &&  DBSynConstans.columnList.get(i)!=null) {
-						tempJComboBox.setSelectedItem(DBSynConstans.columnList.get(i).getSrcColumn());
-						textField.setText(DBSynConstans.columnList.get(i).getSrcContent());
+					if(Constans.columnList!=null && i<Constans.columnList.size() &&  Constans.columnList.get(i)!=null) {
+						tempJComboBox.setSelectedItem(Constans.columnList.get(i).getSrcColumn());
+						textField.setText(Constans.columnList.get(i).getSrcContent());
 					}
 					tempJComboBox.setEnabled(false);
 					textField.setEditable(false);
 					JLabel noLabel = new JLabel("" + (i + 1));
-					noLabel.setFont(DBSynConstans.textFont);
+					noLabel.setFont(Constans.textFont);
 					if(i<srcJComboxs.size() && srcJComboxs.get(i)!=null) {
 						srcJComboxs.set(i,tempJComboBox);
 					}else {
@@ -306,12 +305,13 @@ public class ColumnSettingPanel extends JPanel {
 				logger.info("srcColumns is null");
 			}
 		} catch (Exception e) {
-			logger.error("ColumnSetting error",e);
+			logger.error("ColumnSetting genSrcColumn error",e);
 		}
 	}
 
 	public void genDestColumn() {
-		if (DBSynConstans.destColumns != null) {
+		if (Constans.destColumns != null) {
+			dest_panel.removeAll();
 			for (int i = 0; i < columnLength; i++) {
 				if(destJComboxs==null) {
 					destJComboxs = new ArrayList<JComboBox<String>>();
@@ -320,24 +320,24 @@ public class ColumnSettingPanel extends JPanel {
 					destJTextField = new ArrayList<JTextField>();
 				}
 				JComboBox<String> tempJComboBox = new JComboBox<String>();
-				tempJComboBox.setFont(DBSynConstans.textFont);
+				tempJComboBox.setFont(Constans.textFont);
 				JTextField textField = new JTextField();
-				textField.setFont(DBSynConstans.textFont);
+				textField.setFont(Constans.textFont);
 				textField.setColumns(10);
-				for (int j = 0; j < DBSynConstans.destColumns.size(); j++) {
+				for (int j = 0; j < Constans.destColumns.size(); j++) {
 					if (j == 0) {
 						tempJComboBox.addItem("");
 					}
-					tempJComboBox.addItem(DBSynConstans.destColumns.get(j));
+					tempJComboBox.addItem(Constans.destColumns.get(j));
 				}
-				if(DBSynConstans.columnList!=null && i<DBSynConstans.columnList.size() && DBSynConstans.columnList.get(i)!=null) {
-					tempJComboBox.setSelectedItem(DBSynConstans.columnList.get(i).getDestColumn());
-					textField.setText(DBSynConstans.columnList.get(i).getDestContent());
+				if(Constans.columnList!=null && i<Constans.columnList.size() && Constans.columnList.get(i)!=null) {
+					tempJComboBox.setSelectedItem(Constans.columnList.get(i).getDestColumn());
+					textField.setText(Constans.columnList.get(i).getDestContent());
 				}
 				tempJComboBox.setEnabled(false);
 				textField.setEditable(false);
 				JLabel noLabel = new JLabel("" + (i + 1));
-				noLabel.setFont(DBSynConstans.textFont);
+				noLabel.setFont(Constans.textFont);
 				if(i<destJComboxs.size() && destJComboxs.get(i)!=null) {
 					destJComboxs.set(i,tempJComboBox);
 				}else {
@@ -377,31 +377,11 @@ public class ColumnSettingPanel extends JPanel {
 		}
 
 	}
-	public void refreshSrcColumn() {
-		for(int i=0;i<srcJComboxs.size();i++) {
-			
-		}
-	}
-	public void refreshDestColumn() {
-		for(int i=0;i<destJComboxs.size();i++) {
-			
-		}
-	}
-	public void refreshSrcContent() {
-		for(int i=0;i<srcJComboxs.size();i++) {
-			
-		}
-	}
-	public void refreshDestContent() {
-		for(int i=0;i<destJComboxs.size();i++) {
-			
-		}
-	}
 
 	public void save() {
 		if (srcJComboxs != null && destJTextField != null && destJComboxs != null && destJTextField != null) {
 			try {
-				File column_file = new File(DBSynConstans.columnSettingPath);
+				File column_file = new File(Constans.columnSettingPath);
 				if (column_file.exists()) {
 					column_file.delete();
 				}
@@ -434,9 +414,9 @@ public class ColumnSettingPanel extends JPanel {
 				}
 				fw.flush();
 				fw.close();
-				CommonUtil.encrypt(DBSynConstans.columnSettingPath, DBSynConstans.edit_pw);
+				CommonUtil.encrypt(Constans.columnSettingPath, Constans.edit_pw);
 			} catch (Exception e) {
-				logger.error("ColumnSetting error",e);
+				logger.error("ColumnSetting save error",e);
 			}
 		}
 		disableAll();

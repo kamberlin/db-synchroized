@@ -12,15 +12,12 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import util.CommonUtil;
-import util.DBSynConstans;
+import util.Constans;
 import util.LogManager;
 import util.Logger;
 
 import javax.swing.JTabbedPane;
 import java.awt.Font;
-import java.awt.Toolkit;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
@@ -40,9 +37,12 @@ public class MainFrame extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					String path=System.getProperty("user.dir")+File.separator+DBSynConstans.mainproperty;
-					DBSynConstans.mainproperty=path;
-					System.err.println("mainproperty="+DBSynConstans.mainproperty);
+					if(args!=null && args.length==1) {
+						Constans.rootPath="C:\\Users\\k7043\\Downloads\\dbSynchronize";
+					}else {
+						Constans.rootPath=System.getProperty("user.dir");
+					}
+					Constans.mainproperty=Constans.rootPath+File.separator+Constans.mainproperty;
 					CommonUtil.init();
 					logger= LogManager.getLogger(MainFrame.class);
 					MainFrame frame = new MainFrame();
@@ -107,7 +107,6 @@ public class MainFrame extends JFrame {
 	public MainFrame() {
 		setTitle("DB Synchronizer");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
 		setBounds(0, 0, 1300, 700);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -118,7 +117,10 @@ public class MainFrame extends JFrame {
 		tabbedPane.setPreferredSize(new Dimension(1100, 600));
 		tabbedPane.setFont(new Font("微軟正黑體", Font.PLAIN, 24));
 		contentPane.add(tabbedPane, BorderLayout.NORTH);
-
+		
+		ExecutePanel execute_panel = new ExecutePanel();
+		tabbedPane.addTab("服務歷程", null, execute_panel, null);
+		
 		DataBasePanel db_panel = new DataBasePanel();
 		tabbedPane.addTab("資料庫設定", null, db_panel, null);
 
@@ -128,16 +130,13 @@ public class MainFrame extends JFrame {
 		TimeSettingPanel time_panel = new TimeSettingPanel();
 		tabbedPane.addTab("時間格式轉換", null, time_panel, null);
 
-		ExecutePanel execute_panel = new ExecutePanel();
-		tabbedPane.addTab("服務歷程", null, execute_panel, null);
-
 		tabbedPane.addChangeListener(new ChangeListener() {
 
 			@Override
 			public void stateChanged(ChangeEvent e) {
-				DataBasePanel db_panel = (DataBasePanel) tabbedPane.getComponentAt(0);
-				ColumnSettingPanel column_panel = (ColumnSettingPanel) tabbedPane.getComponentAt(1);
-				TimeSettingPanel timeSettingPanel = (TimeSettingPanel) tabbedPane.getComponentAt(2);
+				DataBasePanel db_panel = (DataBasePanel) tabbedPane.getComponentAt(1);
+				ColumnSettingPanel column_panel = (ColumnSettingPanel) tabbedPane.getComponentAt(2);
+				TimeSettingPanel timeSettingPanel = (TimeSettingPanel) tabbedPane.getComponentAt(3);
 				if (db_panel.isEdit) {
 					db_panel.askSave();
 				}
@@ -147,62 +146,18 @@ public class MainFrame extends JFrame {
 				if (timeSettingPanel.isEdit) {
 					timeSettingPanel.askSave();
 				}
-				db_panel.setDefaultText();
-				db_panel.disableAll();
-				if (tabbedPane.getSelectedIndex() == 0) {
+				if (tabbedPane.getSelectedIndex() == 1) {
+					db_panel.init();
+					db_panel.setDefaultText();
+					db_panel.disableAll();
 					db_panel.checkPassword(db_panel);
-				} else if (tabbedPane.getSelectedIndex() == 1) {
+				} else if (tabbedPane.getSelectedIndex() == 2) {
 					column_panel.loadAllData();
 					column_panel.checkPassword();
-				} else if (tabbedPane.getSelectedIndex() == 2) {
+				} else if (tabbedPane.getSelectedIndex() == 3) {
 					timeSettingPanel.loadAllData();
 					timeSettingPanel.checkPassword();
 				}
-			}
-		});
-
-		db_panel.addComponentListener(new ComponentListener() {
-
-			@Override
-			public void componentShown(ComponentEvent e) {
-			}
-
-			@Override
-			public void componentResized(ComponentEvent e) {
-				if (!db_panel.isLoad) {
-					db_panel.checkPassword(db_panel);
-				}
-			}
-
-			@Override
-			public void componentMoved(ComponentEvent e) {
-			}
-
-			@Override
-			public void componentHidden(ComponentEvent e) {
-
-			}
-		});
-		column_panel.addComponentListener(new ComponentListener() {
-
-			@Override
-			public void componentShown(ComponentEvent e) {
-
-			}
-
-			@Override
-			public void componentResized(ComponentEvent e) {
-
-			}
-
-			@Override
-			public void componentMoved(ComponentEvent e) {
-
-			}
-
-			@Override
-			public void componentHidden(ComponentEvent e) {
-
 			}
 		});
 	}

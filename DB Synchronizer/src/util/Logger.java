@@ -1,8 +1,10 @@
 package util;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
@@ -12,7 +14,7 @@ public class Logger {
 	Class<?> handleClass;
 	SimpleDateFormat sf = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
 	Calendar calendar = Calendar.getInstance();
-	String logFolder=DBSynConstans.logproperty;
+	String logFolder=Constans.logproperty;
 
 	public Logger(Class<?> handleClass) {
 		super();
@@ -20,24 +22,24 @@ public class Logger {
 	}
 
 	public void info(String message) {
-		appendLog(" [INFO] " +handleClass.getName() +  message);
+		appendLog(" [INFO] " +handleClass.getName() +  " "+message);
 	}
 
 	public void error(String message) {
-		appendLog(" [ERROR] "+handleClass.getName() +  message);
+		appendLog(" [ERROR] "+handleClass.getName() +  " "+message);
 	}
 
 	public void error(String message, Exception e) {
-		appendLog(" [ERROR] "+handleClass.getName() + message);
-		appendLog(" [ERROR] "+handleClass.getName() + genErrorMsg(e));
+		appendLog(" [ERROR] "+handleClass.getName() + " "+message);
+		appendLog(" [ERROR] "+handleClass.getName() + " "+genErrorMsg(e));
 	}
 	public void debug(String message) {
-		appendLog(" [DEBUG] "+handleClass.getName() +  message);
+		appendLog(" [DEBUG] "+handleClass.getName() +  " "+message);
 	}
 
 	public void debug(String message, Exception e) {
-		appendLog(" [DEBUG] "+handleClass.getName() + message);
-		appendLog(" [DEBUG] "+handleClass.getName() + genErrorMsg(e));
+		appendLog(" [DEBUG] "+handleClass.getName() + " "+message);
+		appendLog(" [DEBUG] "+handleClass.getName() + " "+genErrorMsg(e));
 	}
 
 	public String getTime() {
@@ -72,10 +74,10 @@ public class Logger {
 						logFile.getParentFile().mkdirs();
 						logFile.createNewFile();
 					}
-					FileWriter fw = new FileWriter(logFile);
-					fw.append(getTime() + " " + message + " \r\n");
-					fw.flush();
-					fw.close();
+					OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(logFile,true),"UTF-8");
+					out.append(getTime() + " " + message + " \r\n");
+					out.flush();
+					out.close();
 				}
 			}
 		} catch (IOException e) {

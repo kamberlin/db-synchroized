@@ -52,9 +52,9 @@ public class DBUtil {
 			}
 		} catch (Exception e1) {
 			if (!(e1.getMessage() != null && (e1.getMessage().indexOf("無法連線") > -1))) {
-				logger.error("DBUtil error",e1);
+				logger.error("DBUtil checkConnection error",e1);
 			} else {
-				logger.error(e1.getMessage());
+				logger.error("DBUtil checkConnection error "+e1.getMessage());
 			}
 		}
 		return isConnected;
@@ -72,9 +72,9 @@ public class DBUtil {
 			}
 		} catch (Exception e1) {
 			if (!(e1.getMessage() != null && (e1.getMessage().indexOf("無法連線") > -1))) {
-				logger.error("DBUtil error",e1);
+				logger.error("DBUtil checkConnection error",e1);
 			} else {
-				logger.error(e1.getMessage());
+				logger.error("DBUtil checkConnection error "+e1.getMessage());
 			}
 		}
 		return isConnected;
@@ -94,67 +94,69 @@ public class DBUtil {
 			}
 		} catch (Exception e1) {
 			if (!("無法連線".indexOf(e1.getMessage()) > -1)) {
-				logger.error("DBUtil error",e1);
+				logger.error("DBUtil checkConnection error",e1);
+			}else {
+				logger.error("DBUtil checkConnection error "+e1.getMessage());
 			}
 		}
 		return isConnected;
 	}
 
 	public static void getDestColumnsFromDB() {
-		if (DBSynConstans.destDBInfo != null) {
+		if (Constans.destDBInfo != null) {
 			try {
-				DAOSQL daoSQL = getDBConnection(DBSynConstans.destDBInfo);
+				DAOSQL daoSQL = getDBConnection(Constans.destDBInfo);
 				PreparedStatement ps = null;
-				if ("Oracle".equals(DBSynConstans.destDBInfo.getType())) {
-					ps = daoSQL.prepareStatement(DBSynConstans.getOracleColumns);
-					ps.setString(1, DBSynConstans.destDBInfo.getUsername());
-					ps.setString(2, DBSynConstans.destDBInfo.getTableName());
+				if ("Oracle".equals(Constans.destDBInfo.getType())) {
+					ps = daoSQL.prepareStatement(Constans.getOracleColumns);
+					ps.setString(1, Constans.destDBInfo.getUsername());
+					ps.setString(2, Constans.destDBInfo.getTableName());
 				} else {
-					ps = daoSQL.prepareStatement(DBSynConstans.getSQLServerColumns);
-					ps.setString(1, DBSynConstans.destDBInfo.getTableName());
+					ps = daoSQL.prepareStatement(Constans.getSQLServerColumns);
+					ps.setString(1, Constans.destDBInfo.getTableName());
 				}
 				ResultSet rs = ps.executeQuery();
-				DBSynConstans.destColumns = new ArrayList<String>();
+				Constans.destColumns = new ArrayList<String>();
 				while (rs.next()) {
-					DBSynConstans.destColumns.add(rs.getString("COLUMN_NAME"));
+					Constans.destColumns.add(rs.getString("COLUMN_NAME"));
 				}
 				daoSQL.close();
 			}
 			catch(SQLException se) {
-				logger.error("DBUtil error",se);
-				logger.info("errorcode="+se.getErrorCode());
+				logger.error("DBUtil getDestColumnsFromDB error",se);
+				logger.error("errorcode="+se.getErrorCode());
 			}
 			catch (Exception e) {
-				logger.error("DBUtil error",e);
+				logger.error("DBUtil getDestColumnsFromDB error",e);
 			}
 		}
 	}
 	public static void getSrcColumnsFromDB() {
-		if (DBSynConstans.srcDBInfo != null) {
+		if (Constans.srcDBInfo != null) {
 			try {
-				DAOSQL daoSQL = getDBConnection(DBSynConstans.srcDBInfo);
+				DAOSQL daoSQL = getDBConnection(Constans.srcDBInfo);
 				PreparedStatement ps = null;
-				if ("Oracle".equals(DBSynConstans.srcDBInfo.getType())) {
-					ps = daoSQL.prepareStatement(DBSynConstans.getOracleColumns);
-					ps.setString(1, DBSynConstans.srcDBInfo.getUsername());
-					ps.setString(2, DBSynConstans.srcDBInfo.getTableName());
+				if ("Oracle".equals(Constans.srcDBInfo.getType())) {
+					ps = daoSQL.prepareStatement(Constans.getOracleColumns);
+					ps.setString(1, Constans.srcDBInfo.getUsername());
+					ps.setString(2, Constans.srcDBInfo.getTableName());
 				} else {
-					ps = daoSQL.prepareStatement(DBSynConstans.getSQLServerColumns);
-					ps.setString(1, DBSynConstans.srcDBInfo.getTableName());
+					ps = daoSQL.prepareStatement(Constans.getSQLServerColumns);
+					ps.setString(1, Constans.srcDBInfo.getTableName());
 				}
 				ResultSet rs = ps.executeQuery();
-				DBSynConstans.srcColumns = new ArrayList<String>();
+				Constans.srcColumns = new ArrayList<String>();
 				while (rs.next()) {
-					DBSynConstans.srcColumns.add(rs.getString("COLUMN_NAME"));
+					Constans.srcColumns.add(rs.getString("COLUMN_NAME"));
 				}
 				daoSQL.close();
 			}
 			catch(SQLException se) {
-				logger.error("DBUtil error",se);
-				logger.info("errorcode="+se.getErrorCode());
+				logger.error("DBUtil getSrcColumnsFromDB error",se);
+				logger.error("errorcode="+se.getErrorCode());
 			}
 			catch (Exception e) {
-				logger.error("DBUtil error",e);
+				logger.error("DBUtil getSrcColumnsFromDB error",e);
 			}
 		}
 	}

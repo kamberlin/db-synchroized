@@ -1,11 +1,15 @@
 package util;
 
+import java.io.File;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 
 import util.LogManager;
@@ -19,13 +23,16 @@ public class TransferThread extends Thread {
 	ArrayList<String> destColumns = null;
 	String pk = null;
 	boolean running = true;
+	JLabel statusTextLabel=null;
 	JTextArea textArea = null;
 	SimpleDateFormat sf = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
 	ArrayList<TransferBean> allTransfer = new ArrayList<TransferBean>();
 
-	public TransferThread(JTextArea textArea) {
+	public TransferThread(JTextArea textArea, JLabel statusTextLabel) {
 		super();
 		this.textArea = textArea;
+		this.statusTextLabel=statusTextLabel;
+		addMessage("啟動服務");
 	}
 
 	@Override
@@ -33,45 +40,50 @@ public class TransferThread extends Thread {
 		super.run();
 		while (running) {
 			try {
-				addMessage(getTime() + " 啟動服務 \r\n");
-				allTransfer = new ArrayList<TransferBean>();
-				prepare();
-				db();
-				Thread.sleep(Integer.parseInt(DBSynConstans.sequence_s) * 1000);
+				if(loadColumnSetting()) {
+					allTransfer = new ArrayList<TransferBean>();
+					prepare();
+					db();
+					Thread.sleep(Integer.parseInt(Constans.sequence_s) * 1000);
+				}else {
+					addMessage("無法找到設定檔案");
+					setRunning(false);
+					if(statusTextLabel!=null) {
+						statusTextLabel.setText("服務停止！");
+					}
+				}
 			} catch (NumberFormatException e) {
-				logger.error("TransferThread error",e);
+				logger.error("TransferThread run error", e);
 			} catch (InterruptedException e) {
-				logger.error("TransferThread error",e);
+				logger.error("TransferThread run error", e);
 			}
 		}
 		logger.info("thread is end");
 	}
 
 	public void prepare() {
-		if (DBSynConstans.columnList != null) {
-			allTransfer.addAll(DBSynConstans.columnList);
+		if (Constans.columnList != null) {
+			allTransfer.addAll(Constans.columnList);
 		}
-		if (DBSynConstans.timeUpList != null) {
-			allTransfer.addAll(DBSynConstans.timeUpList);
+		if (Constans.timeUpList != null) {
+			allTransfer.addAll(Constans.timeUpList);
 		}
-		if (DBSynConstans.timeDownList != null) {
-			allTransfer.addAll(DBSynConstans.timeDownList);
+		if (Constans.timeDownList != null) {
+			allTransfer.addAll(Constans.timeDownList);
 		}
-		if (allTransfer != null) {
-			srcColumns = new ArrayList<String>();
-			destColumns = new ArrayList<String>();
-			for (int i = 0; i < allTransfer.size(); i++) {
-				TransferBean transferBean = allTransfer.get(i);
-				if (transferBean.getSrcColumn() != null && !"".equals(transferBean.getSrcColumn())) {
-					srcColumns.add(transferBean.getSrcColumn());
-				}
-				if (transferBean.getDestColumn() != null && !"".equals(transferBean.getDestColumn())) {
-					destColumns.add(transferBean.getDestColumn());
-				}
+		srcColumns = new ArrayList<String>();
+		destColumns = new ArrayList<String>();
+		for (int i = 0; i < allTransfer.size(); i++) {
+			TransferBean transferBean = allTransfer.get(i);
+			if (transferBean.getSrcColumn() != null && !"".equals(transferBean.getSrcColumn())) {
+				srcColumns.add(transferBean.getSrcColumn());
+			}
+			if (transferBean.getDestColumn() != null && !"".equals(transferBean.getDestColumn())) {
+				destColumns.add(transferBean.getDestColumn());
 			}
 		}
-		if (DBSynConstans.srcColumns != null) {
-			pk = DBSynConstans.srcColumns.get(0);
+		if (Constans.srcColumns != null) {
+			pk = Constans.srcColumns.get(0);
 		}
 		logger.info("pk=" + pk);
 
@@ -82,13 +94,13 @@ public class TransferThread extends Thread {
 			DAOSQL srcDAO = null;
 			DAOSQL destDAO = null;
 			StringBuilder srcSQL = new StringBuilder(" SELECT ");
-			StringBuilder destSQL = new StringBuilder(" INSERT INTO " + DBSynConstans.destDBInfo.getTableName() + "(");
+			StringBuilder destSQL = new StringBuilder(" INSERT INTO " + Constans.destDBInfo.getTableName() + "(");
 			ArrayList<String> updateList = null;
-			if (DBSynConstans.srcDBInfo != null) {
-				srcDAO = DBUtil.getDBConnection(DBSynConstans.srcDBInfo);
+			if (Constans.srcDBInfo != null) {
+				srcDAO = DBUtil.getDBConnection(Constans.srcDBInfo);
 			}
-			if (DBSynConstans.destDBInfo != null) {
-				destDAO = DBUtil.getDBConnection(DBSynConstans.destDBInfo);
+			if (Constans.destDBInfo != null) {
+				destDAO = DBUtil.getDBConnection(Constans.destDBInfo);
 			}
 			for (int i = 0; i < srcColumns.size(); i++) {
 				srcSQL.append(srcColumns.get(i));
@@ -111,33 +123,32 @@ public class TransferThread extends Thread {
 			}
 			destSQL.append(")");
 
-			srcSQL.append(
-					" from " + DBSynConstans.srcDBInfo.getTableName() + " where " + DBSynConstans.condition_column + " = ?");
+			srcSQL.append(" from " + Constans.srcDBInfo.getTableName() + " where " + Constans.condition_column
+					+ " = ?");
 			logger.info("srcSQL=" + srcSQL.toString());
 			logger.info("destSQL=" + destSQL.toString());
 
 			PreparedStatement srcPS = srcDAO.prepareStatement(srcSQL.toString());
 			PreparedStatement destPS = destDAO.prepareStatement(destSQL.toString());
-			srcPS.setString(1, DBSynConstans.condition);
+			srcPS.setString(1, Constans.condition);
+			logger.info("condition="+Constans.condition);
 			ResultSet srcRS = srcPS.executeQuery();
-			String updateSrcSQL = "UPDATE " + DBSynConstans.srcDBInfo.getTableName() + " SET ";
+			String updateSrcSQL = "UPDATE " + Constans.srcDBInfo.getTableName() + " SET ";
 			boolean updateSQLFinished = false;
 			int srcCount = 0, destCount = 0;
 			SimpleDateFormat srcSF = new SimpleDateFormat("yyyyMMddHHmmss");
-			logger.info("allTransfer size=" + allTransfer.size());
 			while (srcRS.next()) {
+				try {
 				srcCount++;
 				int index = 1;
 				for (int i = 0; i < allTransfer.size(); i++) {
 					TransferBean transferBean = allTransfer.get(i);
 					// 時間欄位
-					if (DBSynConstans.timeUp.equals(transferBean.getType())) {
-						if (transferBean.getSrcColumn() != null && !"".equals(transferBean.getSrcColumn())
-								&& transferBean.getDestColumn() != null && !"".equals(transferBean.getDestColumn())
-								&& transferBean.getDestTimeYMDFormat() != null
-								&& !DBSynConstans.defaultJComboBoxText.equals(transferBean.getDestTimeYMDFormat())
-								&& transferBean.getDestTimeHMSFormat() != null
-								&& !DBSynConstans.defaultJComboBoxText.equals(transferBean.getDestTimeHMSFormat())) {
+					if (Constans.timeUp.equals(transferBean.getType())) {
+						if (!"".equals(transferBean.getSrcColumn())
+								&& !"".equals(transferBean.getDestColumn())
+								&& !Constans.defaultJComboBoxText.equals(transferBean.getDestTimeYMDFormat())
+								&& !Constans.defaultJComboBoxText.equals(transferBean.getDestTimeHMSFormat())) {
 							SimpleDateFormat destSF = new SimpleDateFormat(
 									transferBean.getDestTimeYMDFormat() + " " + transferBean.getDestTimeHMSFormat());
 							String timeS = srcRS.getString(transferBean.getSrcColumn());
@@ -149,11 +160,10 @@ public class TransferThread extends Thread {
 						}
 					}
 					// 時間欄位 切欄位
-					else if (DBSynConstans.timeDown.equals(transferBean.getType())) {
-						if (transferBean.getSrcColumn() != null && !"".equals(transferBean.getSrcColumn())
-								&& transferBean.getDestColumn() != null && !"".equals(transferBean.getDestColumn())
-								&& transferBean.getDestTimeYMDFormat() != null
-								&& !DBSynConstans.defaultJComboBoxText.equals(transferBean.getDestTimeYMDFormat())) {
+					else if (Constans.timeDown.equals(transferBean.getType())) {
+						if (!"".equals(transferBean.getSrcColumn())
+								&& !"".equals(transferBean.getDestColumn())
+								&& transferBean.getDestTimeYMDFormat()!=null && !Constans.defaultJComboBoxText.equals(transferBean.getDestTimeYMDFormat())) {
 							SimpleDateFormat destSF = new SimpleDateFormat(transferBean.getDestTimeYMDFormat());
 							String timeS = srcRS.getString(transferBean.getSrcColumn());
 							String destTime = null;
@@ -161,12 +171,9 @@ public class TransferThread extends Thread {
 								destTime = destSF.format(srcSF.parse(timeS));
 							}
 							destPS.setString(index++, destTime);
-						} else if (transferBean.getSrcColumn() != null
-								&& !DBSynConstans.defaultJComboBoxText.equals(transferBean.getSrcColumn())
-								&& transferBean.getDestColumn() != null
-								&& !DBSynConstans.defaultJComboBoxText.equals(transferBean.getDestColumn())
-								&& transferBean.getDestTimeHMSFormat() != null
-								&& !DBSynConstans.defaultJComboBoxText.equals(transferBean.getDestTimeHMSFormat())) {
+						} else if (!"".equals(transferBean.getSrcColumn())
+								&& !"".equals(transferBean.getDestColumn())
+								&& transferBean.getDestTimeHMSFormat()!=null && !Constans.defaultJComboBoxText.equals(transferBean.getDestTimeHMSFormat())) {
 							SimpleDateFormat destSF = new SimpleDateFormat(transferBean.getDestTimeHMSFormat());
 							String timeS = srcRS.getString(transferBean.getSrcColumn());
 							String destTime = null;
@@ -177,19 +184,20 @@ public class TransferThread extends Thread {
 						}
 					}
 					// 一般欄位
-					else if (transferBean.getSrcColumn() != null && !"".equals(transferBean.getSrcColumn())
-							&& transferBean.getDestColumn() != null && !"".equals(transferBean.getDestColumn())) {
+					else if (!"".equals(transferBean.getSrcColumn())
+							 && !"".equals(transferBean.getDestColumn())) {
 						destPS.setString(index++, srcRS.getString(transferBean.getSrcColumn()));
 					}
 					// 寫固定值欄位
-					else if (transferBean.getSrcColumn() == null && transferBean.getDestColumn() != null
-							&& transferBean.getDestContent() != null && !"".equals(transferBean.getDestContent())) {
+					else if ("".equals(transferBean.getSrcColumn()) && !"".equals(transferBean.getDestColumn())
+							&& !"".equals(transferBean.getDestContent())) {
 						destPS.setString(index++, transferBean.getDestContent());
-					} else {
-						logger.info(transferBean.getSrcColumn());
+					} else if(!"".equals(transferBean.getSrcColumn()) && !"".equals(transferBean.getSrcContent()) && "".equals(transferBean.getDestColumn())){
+						//來源需更新欄位
+					}else {
 					}
 					if (!updateSQLFinished) {
-						if (transferBean.getSrcColumn() != null && !"".equals(transferBean.getSrcColumn())
+						if (!"".equals(transferBean.getSrcColumn())
 								&& transferBean.getSrcContent() != null && !"".equals(transferBean.getSrcContent())) {
 							updateSrcSQL = updateSrcSQL + transferBean.getSrcColumn() + "='"
 									+ transferBean.getSrcContent() + "',";
@@ -207,10 +215,15 @@ public class TransferThread extends Thread {
 					}
 					updateList.add(srcRS.getString(pk));
 				}
+				}catch(SQLException e) {
+					logger.error("TransferThread Insert Error ",e);
+				}catch(Exception e) {
+					logger.error("TransferThread Insert Error ",e);
+				}
 			}
 			destPS.close();
-			addMessage(getTime() + " 讀取來源資料庫 " + srcCount + " 筆，寫入目標資料庫成功 " + destCount + "，失敗 "
-					+ (srcCount - destCount) + " 筆 \r\n");
+			addMessage("讀取來源資料庫 " + srcCount + " 筆，寫入目標資料庫成功 " + destCount + "，失敗 "
+					+ (srcCount - destCount) + " 筆");
 			updateSrcSQL = updateSrcSQL.substring(0, updateSrcSQL.length() - 1) + " where " + pk + "=?";
 			if (updateList != null) {
 				logger.info("updateSrcSQL=" + updateSrcSQL);
@@ -223,7 +236,7 @@ public class TransferThread extends Thread {
 			}
 
 		} catch (Exception e) {
-			logger.error("TransferThread error",e);
+			logger.error("TransferThread db error", e);
 		}
 	}
 
@@ -234,14 +247,11 @@ public class TransferThread extends Thread {
 	public void setRunning(boolean running) {
 		this.running = running;
 		if (running == false) {
-			addMessage(getTime() + " 停止服務! \r\n");
+			addMessage("停止服務!");
+			allTransfer.clear();
 		} else {
-			addMessage(getTime() + " 啟動服務! \r\n");
+			addMessage("啟動服務!");
 		}
-	}
-
-	public String getTime() {
-		return sf.format(new Date());
 	}
 
 	public void addMessage(String message) {
@@ -249,7 +259,48 @@ public class TransferThread extends Thread {
 			if (textArea.getLineCount() > 100) {
 				textArea.setText("");
 			}
-			textArea.append(message);
+			textArea.append(sf.format(new Date())+" "+message +"\r\n");
 		}
+	}
+	public boolean loadColumnSetting() {
+		boolean isLoad=false;
+		try {
+			File column_file = new File(Constans.columnSettingPath);
+			File timeUp_file = new File(Constans.timeUpPath);
+			File timeDown_file = new File(Constans.timeDownPath);
+			//解密檔案
+			if(column_file.exists()) {
+				CommonUtil.decrypt(column_file.getPath(), Constans.edit_pw);
+				File columnDecode = new File(column_file.getParent() + File.separator+CommonUtil.getFileNameWithOutExtension(column_file) + "_decode.txt");
+				if (columnDecode.exists()) {
+					CommonUtil.readColumnFile(columnDecode);
+				}
+			}
+			if(timeUp_file.exists()) {
+				CommonUtil.decrypt(timeUp_file.getPath(), Constans.edit_pw);
+				File timeUpDecode = new File(timeUp_file.getParent() + File.separator+CommonUtil.getFileNameWithOutExtension(timeUp_file) + "_decode.txt");
+				if (timeUpDecode.exists()) {
+					CommonUtil.readTimeUpFile(timeUpDecode);
+				}
+			}
+			if(timeDown_file.exists()) {
+				CommonUtil.decrypt(timeDown_file.getPath(), Constans.edit_pw);
+				File timeDownDecode = new File(timeDown_file.getParent() + File.separator+CommonUtil.getFileNameWithOutExtension(timeDown_file) + "_decode.txt");
+				if (timeDownDecode.exists()) {
+					CommonUtil.readTimeDownFile(timeDownDecode);
+				}
+			}
+			if (!column_file.exists()) {
+				JOptionPane.showMessageDialog(null, "無法找到設定檔，請檢查是否有儲存設定", "執行異常", JOptionPane.ERROR_MESSAGE);
+			} else {
+				isLoad=true;
+				addMessage("已讀入所有欄位及時間設定");
+				logger.info("已讀入所有欄位及時間設定");
+			}
+
+		} catch (Exception e) {
+			logger.error("TransferThread loadColumnSetting error",e);
+		}
+		return isLoad;
 	}
 }

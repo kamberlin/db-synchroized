@@ -8,11 +8,12 @@ import bean.SrcDBInfo;
 import bean.TransferBean;
 import bean.TransferBean;
 
-public class DBSynConstans {
+public class Constans {
 	public static String edit_pw="13084002";
 	public static SrcDBInfo srcDBInfo=null;
 	public static DestDBInfo destDBInfo=null;
-	public static String mainproperty="../etc/dbsyn.properties";
+	public static String rootPath=null;
+	public static String mainproperty="etc\\dbsyn.properties";
 	public static String dbproperty=null;
 	public static String logproperty=null;
 	public static String sequence_s="30";
