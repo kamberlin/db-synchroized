@@ -27,6 +27,19 @@ public class DBUtil {
 		}
 		return daoSQL;
 	}
+	public static DAOSQL getDBConnection(String db_type, String ip, String account, String password, String database,int timeout)
+			throws Exception {
+		String url = null;
+		DAOSQL daoSQL = null;
+		if ("Oracle".equals(db_type)) {
+			url = "jdbc:oracle:thin:@" + ip + ":1521:" + database;
+			daoSQL = new DAOSQL(url, account, password,timeout);
+		} else if ("SQLServer".equals(db_type)) {
+			url = "jdbc:sqlserver://" + ip + ":1433;databaseName=" + database;
+			daoSQL = new DAOSQL(url, account, password, timeout);
+		}
+		return daoSQL;
+	}
 
 	public static DAOSQL getDBConnection(SrcDBInfo srcDBInfo) throws Exception {
 		DAOSQL daoSQL = getDBConnection(srcDBInfo.getType(), srcDBInfo.getIp(), srcDBInfo.getUsername(),
@@ -39,12 +52,23 @@ public class DBUtil {
 				destDBInfo.getPassword(), destDBInfo.getDbName());
 		return daoSQL;
 	}
+	public static DAOSQL getDBConnection(SrcDBInfo srcDBInfo,int timeout) throws Exception {
+		DAOSQL daoSQL = getDBConnection(srcDBInfo.getType(), srcDBInfo.getIp(), srcDBInfo.getUsername(),
+				srcDBInfo.getPassword(), srcDBInfo.getDbName(),timeout);
+		return daoSQL;
+	}
 
-	public static boolean checkConnection(SrcDBInfo srcDBInfo) {
+	public static DAOSQL getDBConnection(DestDBInfo destDBInfo,int timeout) throws Exception {
+		DAOSQL daoSQL = getDBConnection(destDBInfo.getType(), destDBInfo.getIp(), destDBInfo.getUsername(),
+				destDBInfo.getPassword(), destDBInfo.getDbName(),timeout);
+		return daoSQL;
+	}
+
+	public static boolean checkConnection(SrcDBInfo srcDBInfo,int timeout) {
 		boolean isConnected = false;
 		try {
 			if (checkAllNotEmpty(srcDBInfo)) {
-				DAOSQL daoSQL = getDBConnection(srcDBInfo);
+				DAOSQL daoSQL = getDBConnection(srcDBInfo,timeout);
 				isConnected = true;
 				daoSQL.close();
 			} else {
@@ -64,7 +88,7 @@ public class DBUtil {
 		boolean isConnected = false;
 		try {
 			if (checkAllNotEmpty(destDBInfo)) {
-				DAOSQL daoSQL = getDBConnection(destDBInfo);
+				DAOSQL daoSQL = getDBConnection(destDBInfo,3);
 				isConnected = true;
 				daoSQL.close();
 			} else {
@@ -86,7 +110,7 @@ public class DBUtil {
 			if ((db_type != null && !"".equals(db_type)) && (ip != null && !"".equals(ip))
 					&& (username != null && !"".equals(username)) && (password != null && !"".equals(password))
 					&& (dbName != null && !"".equals(dbName))) {
-				DAOSQL daoSQL = getDBConnection(db_type, ip, username, password, dbName);
+				DAOSQL daoSQL = getDBConnection(db_type, ip, username, password, dbName,3);
 				isConnected = true;
 				daoSQL.close();
 			} else {

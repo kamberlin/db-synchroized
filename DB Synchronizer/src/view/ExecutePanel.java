@@ -17,7 +17,6 @@ import util.Constans;
 import util.TransferThread;
 
 public class ExecutePanel extends JPanel {
-	private static Logger logger = LogManager.getLogger(ExecutePanel.class);
 	TransferThread transferThread = null;
 
 	/**

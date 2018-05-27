@@ -47,6 +47,7 @@ public class DataBasePanel extends JPanel {
 	JComboBox<String> db_src_type = null;
 	JComboBox<String> db_dest_type = null;
 	JComboBox<String> condition_columns = null;
+	JComboBox<String> pk_columns = null;
 
 	JTextField dest_ip_text = null;
 	JTextField dest_username_text = null;
@@ -119,7 +120,6 @@ public class DataBasePanel extends JPanel {
 		gbSrc.weightx = 1.5;
 		gbSrc.weighty = 1;
 		gbSrc.fill = GridBagConstraints.HORIZONTAL;
-		// gb.fill = GridBagConstraints.BOTH;
 		dbinfo_src_panel.add(db_src_type_label, gbSrc);
 
 		db_src_type = new JComboBox<String>();
@@ -536,7 +536,16 @@ public class DataBasePanel extends JPanel {
 		condition_text.setFont(Constans.textFont);
 		condition_panel.add(condition_text);
 		condition_text.setColumns(10);
-
+		
+		JLabel src_pk_label=new JLabel("來源主鍵:");
+		src_pk_label.setFont(Constans.titleFont);
+		condition_panel.add(src_pk_label);
+		
+		pk_columns = new JComboBox<String>();
+		pk_columns.setFont(Constans.textFont);
+		pk_columns.setMaximumSize(dimension);
+		condition_panel.add(pk_columns);
+		
 		allTexts.add(condition_text);
 
 		JPanel btn_panel = new JPanel();
@@ -559,7 +568,7 @@ public class DataBasePanel extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				save();
 				if(dbFile!=null) {
-					reload(dbFile);
+					reload();
 				}
 				disableAll();
 			}
@@ -571,7 +580,7 @@ public class DataBasePanel extends JPanel {
 			if (Constans.dbproperty != null) {
 				dbFile = new File(Constans.dbproperty);
 				if (isFileExist(dbFile)) {
-					reload(dbFile);
+					reload();
 				}
 			}
 			if (Constans.columnproperty != null) {
@@ -586,6 +595,12 @@ public class DataBasePanel extends JPanel {
 						for(int i=0;i<Constans.srcColumns.size();i++) {
 							if(condition_columns!=null) {
 								condition_columns.addItem(Constans.srcColumns.get(i));
+							}
+							if(pk_columns!=null) {
+								logger.info("pk_columns add "+Constans.srcColumns.get(i));
+								pk_columns.addItem(Constans.srcColumns.get(i));
+							}else {
+								logger.info("pk_columns is null");
 							}
 						}
 					}
@@ -625,7 +640,7 @@ public class DataBasePanel extends JPanel {
 	public void checkPassword(JPanel panel) {
 		logger.info("驗證密碼中");
 		if(dbFile!=null) {
-			reload(dbFile);
+			reload();
 			setDefaultText();
 		}
 		boolean result = CommonUtil.enterPassword(panel);
@@ -647,6 +662,7 @@ public class DataBasePanel extends JPanel {
 		db_src_type.setEnabled(false);
 		db_dest_type.setEnabled(false);
 		condition_columns.setEnabled(false);
+		pk_columns.setEnabled(false);
 		edit_Btn.setEnabled(false);
 		isEdit = false;
 	}
@@ -660,6 +676,7 @@ public class DataBasePanel extends JPanel {
 		db_src_type.setEnabled(true);
 		db_dest_type.setEnabled(true);
 		condition_columns.setEnabled(true);
+		pk_columns.setEnabled(true);
 		edit_Btn.setEnabled(true);
 		isEdit = true;
 	}
@@ -683,6 +700,7 @@ public class DataBasePanel extends JPanel {
 			db_src_type.setSelectedItem(Constans.srcDBInfo.getType());
 			db_dest_type.setSelectedItem(Constans.destDBInfo.getType());
 			condition_columns.setSelectedItem(Constans.condition_column);
+			pk_columns.setSelectedItem(Constans.pk_column);
 			sequence_text.setText(Constans.sequence_s);
 			condition_text.setText(Constans.condition);
 		}
@@ -691,18 +709,14 @@ public class DataBasePanel extends JPanel {
 	public void save() {
 		SystemConfigUtil systemConfigUtil;
 		try {
-			File decodeDBFile = new File(dbFile.getParent() + File.separator
-					+ CommonUtil.getFileNameWithOutExtension(dbFile) + "_decode.txt");
-			//先解密
 			if(dbFile!=null && dbFile.exists()) {
-				CommonUtil.decrypt(dbFile.getPath(), Constans.edit_pw);
+				dbFile.delete();
 			}else {
-				dbFile.getParentFile().mkdirs();
-				dbFile.createNewFile();
+				dbFile=new File(Constans.dbproperty);
 			}
-			if(decodeDBFile.exists()) {
-				decodeDBFile.renameTo(dbFile);
-			}
+			
+			dbFile.getParentFile().mkdirs();
+			dbFile.createNewFile();
 			systemConfigUtil = new SystemConfigUtil(dbFile);
 			//儲存設定
 			systemConfigUtil.save("src.type", (String) db_src_type.getSelectedItem());
@@ -722,7 +736,7 @@ public class DataBasePanel extends JPanel {
 			systemConfigUtil.save("sequence", sequence_text.getText());
 			systemConfigUtil.save("condition", condition_text.getText());
 			systemConfigUtil.save("condition_column", (String) condition_columns.getSelectedItem());
-			
+			systemConfigUtil.save("pk_column", (String) pk_columns.getSelectedItem());
 			//將檔案再加密
 			CommonUtil.encrypt(dbFile.getPath(), Constans.edit_pw);
 		} catch (Exception e) {
@@ -730,14 +744,14 @@ public class DataBasePanel extends JPanel {
 		}
 	}
 
-	public void reload(File dbFile) {
+	public void reload() {
 		try {
 			File decodeDBFile = new File(dbFile.getParent() + File.separator
 					+ CommonUtil.getFileNameWithOutExtension(dbFile) + "_decode.txt");
 			if (dbFile.exists()) {
 				CommonUtil.decrypt(dbFile.getPath(), Constans.edit_pw);
 				SystemConfigUtil dbConfig = new SystemConfigUtil(decodeDBFile);
-				decodeDBFile.delete();
+				//decodeDBFile.delete();
 				Constans.srcDBInfo = new SrcDBInfo(dbConfig.get("src.type"), dbConfig.get("src.ip"),
 						dbConfig.get("src.username"), dbConfig.get("src.password"), dbConfig.get("src.dbname"),
 						dbConfig.get("src.tablename"));
@@ -747,6 +761,7 @@ public class DataBasePanel extends JPanel {
 				Constans.sequence_s = dbConfig.get("sequence");
 				Constans.condition = dbConfig.get("condition");
 				Constans.condition_column = dbConfig.get("condition_column");
+				Constans.pk_column = dbConfig.get("pk_column");
 			}
 		} catch (Exception e) {
 			logger.error("DataBasePanel reload error", e);
@@ -768,6 +783,9 @@ public class DataBasePanel extends JPanel {
 					Constans.srcColumns.add(temp);
 					if (condition_columns != null) {
 						condition_columns.addItem(temp);
+					}
+					if (pk_columns != null) {
+						pk_columns.addItem(temp);
 					}
 				}
 			}

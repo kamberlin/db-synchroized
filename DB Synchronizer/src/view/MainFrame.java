@@ -20,7 +20,6 @@ import javax.swing.JTabbedPane;
 import java.awt.Font;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.io.File;
 
 public class MainFrame extends JFrame {
 
@@ -30,6 +29,7 @@ public class MainFrame extends JFrame {
 	private static final long serialVersionUID = 8720432252745326845L;
 	private static Logger logger =null;
 	private JPanel contentPane;
+	private int selected=0;
 	/**
 	 * Launch the application.
 	 */
@@ -42,7 +42,6 @@ public class MainFrame extends JFrame {
 					}else {
 						Constans.rootPath=System.getProperty("user.dir");
 					}
-					Constans.mainproperty=Constans.rootPath+File.separator+Constans.mainproperty;
 					CommonUtil.init();
 					logger= LogManager.getLogger(MainFrame.class);
 					MainFrame frame = new MainFrame();
@@ -137,15 +136,20 @@ public class MainFrame extends JFrame {
 				DataBasePanel db_panel = (DataBasePanel) tabbedPane.getComponentAt(1);
 				ColumnSettingPanel column_panel = (ColumnSettingPanel) tabbedPane.getComponentAt(2);
 				TimeSettingPanel timeSettingPanel = (TimeSettingPanel) tabbedPane.getComponentAt(3);
-				if (db_panel.isEdit) {
+				int newSelected=tabbedPane.getSelectedIndex();
+				
+				//判斷是否需要詢問儲存
+				if (selected==1 && db_panel.isEdit) {
 					db_panel.askSave();
 				}
-				if (column_panel.isEdit) {
+				if (selected==2 && column_panel.isEdit) {
 					column_panel.askSave();
 				}
-				if (timeSettingPanel.isEdit) {
+				if (selected==3 && timeSettingPanel.isEdit) {
 					timeSettingPanel.askSave();
 				}
+				
+				selected=newSelected;
 				if (tabbedPane.getSelectedIndex() == 1) {
 					db_panel.init();
 					db_panel.setDefaultText();

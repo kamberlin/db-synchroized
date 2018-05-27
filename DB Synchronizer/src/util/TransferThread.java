@@ -82,10 +82,6 @@ public class TransferThread extends Thread {
 				destColumns.add(transferBean.getDestColumn());
 			}
 		}
-		if (Constans.srcColumns != null) {
-			pk = Constans.srcColumns.get(0);
-		}
-		logger.info("pk=" + pk);
 
 	}
 
@@ -129,7 +125,6 @@ public class TransferThread extends Thread {
 			logger.info("destSQL=" + destSQL.toString());
 
 			PreparedStatement srcPS = srcDAO.prepareStatement(srcSQL.toString());
-			PreparedStatement destPS = destDAO.prepareStatement(destSQL.toString());
 			srcPS.setString(1, Constans.condition);
 			logger.info("condition="+Constans.condition);
 			ResultSet srcRS = srcPS.executeQuery();
@@ -137,6 +132,7 @@ public class TransferThread extends Thread {
 			boolean updateSQLFinished = false;
 			int srcCount = 0, destCount = 0;
 			SimpleDateFormat srcSF = new SimpleDateFormat("yyyyMMddHHmmss");
+			PreparedStatement destPS = destDAO.prepareStatement(destSQL.toString());
 			while (srcRS.next()) {
 				try {
 				srcCount++;
@@ -213,7 +209,7 @@ public class TransferThread extends Thread {
 					if (updateList == null) {
 						updateList = new ArrayList<String>();
 					}
-					updateList.add(srcRS.getString(pk));
+					updateList.add(srcRS.getString(Constans.pk_column));
 				}
 				}catch(SQLException e) {
 					logger.error("TransferThread Insert Error ",e);
@@ -225,15 +221,17 @@ public class TransferThread extends Thread {
 			addMessage("讀取來源資料庫 " + srcCount + " 筆，寫入目標資料庫成功 " + destCount + "，失敗 "
 					+ (srcCount - destCount) + " 筆");
 			updateSrcSQL = updateSrcSQL.substring(0, updateSrcSQL.length() - 1) + " where " + pk + "=?";
+			PreparedStatement srcUpdatePS = srcDAO.prepareStatement(updateSrcSQL);
 			if (updateList != null) {
 				logger.info("updateSrcSQL=" + updateSrcSQL);
 				for (int i = 0; i < updateList.size(); i++) {
-					PreparedStatement srcUpdatePS = srcDAO.prepareStatement(updateSrcSQL);
 					srcUpdatePS.setString(1, updateList.get(i));
 					srcUpdatePS.executeUpdate();
-					srcUpdatePS.close();
 				}
 			}
+			srcUpdatePS.close();
+			srcDAO.close();
+			destDAO.close();
 
 		} catch (Exception e) {
 			logger.error("TransferThread db error", e);
@@ -260,6 +258,7 @@ public class TransferThread extends Thread {
 				textArea.setText("");
 			}
 			textArea.append(sf.format(new Date())+" "+message +"\r\n");
+			textArea.setSelectionStart(textArea.getText().length());  
 		}
 	}
 	public boolean loadColumnSetting() {

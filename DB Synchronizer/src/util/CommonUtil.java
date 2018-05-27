@@ -32,6 +32,7 @@ import bean.TransferBean;
 public class CommonUtil {
 	private static Logger logger = null;
 	ClassLoader classLoader = getClass().getClassLoader();
+
 	public static JComboBox<String> createColumnsJCombox(String type) {
 		JComboBox<String> tempJComboBox = new JComboBox<String>();
 		ArrayList<String> temp = null;
@@ -87,11 +88,11 @@ public class CommonUtil {
 						} else if ("".equals(transfer.getSrcColumn()) && !"".equals(transfer.getDestColumn())
 								&& !"".equals(transfer.getDestContent())) {
 							Constans.columnList.add(transfer);
-						}else if(!"".equals(transfer.getSrcColumn()) && !"".equals(transfer.getSrcContent()) && "".equals(transfer.getDestColumn())) {
+						} else if (!"".equals(transfer.getSrcColumn()) && !"".equals(transfer.getSrcContent())
+								&& "".equals(transfer.getDestColumn())) {
 							Constans.columnList.add(transfer);
-						}
-						else {
-							//logger.info(line);
+						} else {
+							// logger.info(line);
 						}
 					} else {
 						logger.info("not add " + line);
@@ -99,9 +100,9 @@ public class CommonUtil {
 				}
 			}
 		} catch (FileNotFoundException e) {
-			logger.error("CommonUtil readColumnFile error",e);
+			logger.error("CommonUtil readColumnFile error", e);
 		} catch (IOException e) {
-			logger.error("CommonUtil readColumnFile error",e);
+			logger.error("CommonUtil readColumnFile error", e);
 		}
 	}
 
@@ -121,9 +122,9 @@ public class CommonUtil {
 				}
 			}
 		} catch (FileNotFoundException e) {
-			logger.error("CommonUtil readTimeUpFile error",e);
+			logger.error("CommonUtil readTimeUpFile error", e);
 		} catch (IOException e) {
-			logger.error("CommonUtil readTimeUpFile error",e);
+			logger.error("CommonUtil readTimeUpFile error", e);
 		}
 	}
 
@@ -146,9 +147,9 @@ public class CommonUtil {
 				}
 			}
 		} catch (FileNotFoundException e) {
-			logger.error("CommonUtil readTimeDownFile error",e);
+			logger.error("CommonUtil readTimeDownFile error", e);
 		} catch (IOException e) {
-			logger.error("CommonUtil readTimeDownFile error",e);
+			logger.error("CommonUtil readTimeDownFile error", e);
 		}
 	}
 
@@ -165,7 +166,7 @@ public class CommonUtil {
 		return result;
 	}
 
-	//解密
+	// 解密
 	public static void decrypt(String file, String password) throws Exception {
 		SecureRandom random = new SecureRandom();
 		DESKeySpec desKey = new DESKeySpec(password.getBytes());
@@ -173,9 +174,10 @@ public class CommonUtil {
 		SecretKey securekey = keyFactory.generateSecret(desKey);
 		Cipher cipher = Cipher.getInstance("DES");
 		cipher.init(Cipher.DECRYPT_MODE, securekey, random);
-		File srcFile=new File(file);
-		File destFile=new File(srcFile.getParent()+File.separator+CommonUtil.getFileNameWithOutExtension(srcFile)+"_decode.txt");
-		if(!destFile.exists()) {
+		File srcFile = new File(file);
+		File destFile = new File(
+				srcFile.getParent() + File.separator + CommonUtil.getFileNameWithOutExtension(srcFile) + "_decode.txt");
+		if (!destFile.exists()) {
 			destFile.createNewFile();
 		}
 		InputStream is = new FileInputStream(srcFile);
@@ -190,7 +192,8 @@ public class CommonUtil {
 		out.close();
 		is.close();
 	}
-	//加密
+
+	// 加密
 	public static void encrypt(String file, String password) throws Exception {
 		SecureRandom random = new SecureRandom();
 		DESKeySpec desKey = new DESKeySpec(password.getBytes());
@@ -198,9 +201,10 @@ public class CommonUtil {
 		SecretKey securekey = keyFactory.generateSecret(desKey);
 		Cipher cipher = Cipher.getInstance("DES");
 		cipher.init(Cipher.ENCRYPT_MODE, securekey, random);
-		
-		File srcFile=new File(file);
-		File destFile=new File(srcFile.getParent()+File.separator+CommonUtil.getFileNameWithOutExtension(srcFile)+"_encode.bin");
+
+		File srcFile = new File(file);
+		File destFile = new File(
+				srcFile.getParent() + File.separator + CommonUtil.getFileNameWithOutExtension(srcFile) + "_encode.bin");
 		InputStream is = new FileInputStream(srcFile);
 		OutputStream out = new FileOutputStream(destFile);
 		CipherInputStream cis = new CipherInputStream(is, cipher);
@@ -213,46 +217,47 @@ public class CommonUtil {
 		is.close();
 		out.close();
 		srcFile.delete();
-		if(destFile.exists()) {
+		if (destFile.exists()) {
 			destFile.renameTo(srcFile);
 		}
 	}
+
 	public static String getFileNameWithOutExtension(File file) {
 		String name = file.getName();
 		int pos = name.lastIndexOf(".");
 		if (pos > 0) {
-		    name = name.substring(0, pos);
+			name = name.substring(0, pos);
 		}
 		return name;
 	}
+
 	public static void init() {
-		SystemConfigUtil systemConfigUtil;
 		try {
-			if(checkClassPathPropertiesExist(Constans.mainproperty)) {
-				systemConfigUtil = new SystemConfigUtil(Constans.mainproperty);
-				Constans.dbproperty = Constans.rootPath+File.separator+File.separator+"data"+File.separator+"db.properties";
-				Constans.logproperty = Constans.rootPath+File.separator+"log";
-				Constans.columnproperty = systemConfigUtil.get("column.folder");
-				Constans.timeUpPath = Constans.rootPath+File.separator+"data"+File.separator+"timeUp.txt";
-				Constans.timeDownPath = Constans.rootPath+File.separator+"data"+File.separator+"timeDown.txt";
-				Constans.columnSettingPath = Constans.rootPath+File.separator+"data"+File.separator+"column_setting.txt";
-				reload(Constans.dbproperty);
-				if (Constans.columnproperty != null) {
-					File columnFile = new File(Constans.columnproperty);
-					if (columnFile.exists()) {
-						Constans.srcColumns = new ArrayList<String>();
-						getColumns(columnFile);
-					}
+			Constans.dbproperty = Constans.rootPath + File.separator + File.separator + "data" + File.separator
+					+ "db.properties";
+			Constans.logproperty = Constans.rootPath + File.separator + "log";
+			Constans.columnproperty = Constans.rootPath + File.separator + File.separator + "etc" + File.separator
+					+ "columns.txt";
+			Constans.timeUpPath = Constans.rootPath + File.separator + "data" + File.separator + "timeUp.bin";
+			Constans.timeDownPath = Constans.rootPath + File.separator + "data" + File.separator + "timeDown.bin";
+			Constans.columnSettingPath = Constans.rootPath + File.separator + "data" + File.separator
+					+ "column_setting.bin";
+			reload(Constans.dbproperty);
+			if (Constans.columnproperty != null) {
+				File columnFile = new File(Constans.columnproperty);
+				if (columnFile.exists()) {
+					Constans.srcColumns = new ArrayList<String>();
+					getColumns(columnFile);
 				}
-				logger=LogManager.getLogger(CommonUtil.class);
-			}else {
-				logger.error("無法正確載入參數");
-			    JOptionPane.showMessageDialog(null, "無法正確載入參數", "讀取參數檔異常", JOptionPane.ERROR_MESSAGE);
 			}
+			logger = LogManager.getLogger(CommonUtil.class);
 		} catch (Exception e) {
-			logger.error("CommonUtil init ",e);
+			logger.error("無法正確載入參數");
+			JOptionPane.showMessageDialog(null, "無法正確載入參數", "讀取參數檔異常", JOptionPane.ERROR_MESSAGE);
+			logger.error("CommonUtil init ", e);
 		}
 	}
+
 	public static void getColumns(File columnFile) {
 		StringBuilder sb = new StringBuilder();
 		try (BufferedReader br = new BufferedReader(new FileReader(columnFile))) {
@@ -274,9 +279,10 @@ public class CommonUtil {
 			logger.error("CommonUtil getColumns error", e);
 		}
 	}
+
 	public static void reload(String dbFilePath) {
 		try {
-			File dbFile=new File(dbFilePath);
+			File dbFile = new File(dbFilePath);
 			File decodeDBFile = new File(dbFile.getParent() + File.separator
 					+ CommonUtil.getFileNameWithOutExtension(dbFile) + "_decode.txt");
 			if (dbFile.exists()) {
@@ -297,31 +303,32 @@ public class CommonUtil {
 			logger.error("CommonUtil reload error", e);
 		}
 	}
+
 	public static boolean checkClassPathPropertiesExist(String propertyName) {
 		boolean result = false;
 		try {
-			if(propertyName!=null) {
-				if(propertyName.startsWith("../")) {
-					File testFile=new File(propertyName);
-					if(testFile.exists()) {
-						result=true;
+			if (propertyName != null) {
+				if (propertyName.startsWith("../")) {
+					File testFile = new File(propertyName);
+					if (testFile.exists()) {
+						result = true;
 					}
-				}else {
+				} else {
 					URL url = CommonUtil.class.getClassLoader().getResource(propertyName);
-					if (url!=null && url.toURI()!=null && url.toURI().getPath() != null) {
+					if (url != null && url.toURI() != null && url.toURI().getPath() != null) {
 						String filePath = url.toURI().getPath();
 						File tempFile = new File(filePath);
 						result = tempFile.exists();
-					}else {
-						File testFile=new File(propertyName);
-						if(testFile.exists()) {
-							result=true;
+					} else {
+						File testFile = new File(propertyName);
+						if (testFile.exists()) {
+							result = true;
 						}
 					}
 				}
 			}
 		} catch (URISyntaxException e) {
-			logger.error("CommonUtil checkClassPathPropertiesExist error",e);
+			logger.error("CommonUtil checkClassPathPropertiesExist error", e);
 		}
 		return result;
 	}
