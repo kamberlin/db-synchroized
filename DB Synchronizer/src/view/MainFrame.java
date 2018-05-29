@@ -123,6 +123,9 @@ public class MainFrame extends JFrame {
 		DataBasePanel db_panel = new DataBasePanel();
 		tabbedPane.addTab("資料庫設定", null, db_panel, null);
 
+		ConditionPanel condition_panel=new ConditionPanel();
+		tabbedPane.addTab("執行條件", null, condition_panel, null);
+		
 		ColumnSettingPanel column_panel = new ColumnSettingPanel();
 		tabbedPane.addTab("欄位設定", null, column_panel, null);
 
@@ -134,18 +137,22 @@ public class MainFrame extends JFrame {
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				DataBasePanel db_panel = (DataBasePanel) tabbedPane.getComponentAt(1);
-				ColumnSettingPanel column_panel = (ColumnSettingPanel) tabbedPane.getComponentAt(2);
-				TimeSettingPanel timeSettingPanel = (TimeSettingPanel) tabbedPane.getComponentAt(3);
+				ConditionPanel condition_panel=(ConditionPanel)tabbedPane.getComponentAt(2);
+				ColumnSettingPanel column_panel = (ColumnSettingPanel) tabbedPane.getComponentAt(3);
+				TimeSettingPanel timeSettingPanel = (TimeSettingPanel) tabbedPane.getComponentAt(4);
 				int newSelected=tabbedPane.getSelectedIndex();
 				
 				//判斷是否需要詢問儲存
 				if (selected==1 && db_panel.isEdit) {
 					db_panel.askSave();
 				}
-				if (selected==2 && column_panel.isEdit) {
+				if(selected==2 && condition_panel.isEdit) {
+					condition_panel.askSave();
+				}
+				if (selected==3 && column_panel.isEdit) {
 					column_panel.askSave();
 				}
-				if (selected==3 && timeSettingPanel.isEdit) {
+				if (selected==4 && timeSettingPanel.isEdit) {
 					timeSettingPanel.askSave();
 				}
 				
@@ -155,10 +162,16 @@ public class MainFrame extends JFrame {
 					db_panel.setDefaultText();
 					db_panel.disableAll();
 					db_panel.checkPassword(db_panel);
-				} else if (tabbedPane.getSelectedIndex() == 2) {
+				}
+				else if(tabbedPane.getSelectedIndex()==2) {
+					condition_panel.init();
+					condition_panel.disableAll();
+					condition_panel.checkPassword();
+				}
+				else if (tabbedPane.getSelectedIndex() == 3) {
 					column_panel.loadAllData();
 					column_panel.checkPassword();
-				} else if (tabbedPane.getSelectedIndex() == 3) {
+				} else if (tabbedPane.getSelectedIndex() == 4) {
 					timeSettingPanel.loadAllData();
 					timeSettingPanel.checkPassword();
 				}

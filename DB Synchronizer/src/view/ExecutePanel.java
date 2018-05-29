@@ -10,8 +10,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.TitledBorder;
-import util.LogManager;
-import util.Logger;
 import layout.TableLayout;
 import util.Constans;
 import util.TransferThread;

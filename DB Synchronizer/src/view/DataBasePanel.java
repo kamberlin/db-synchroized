@@ -4,17 +4,12 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -27,8 +22,6 @@ import javax.swing.border.TitledBorder;
 
 import util.LogManager;
 import util.Logger;
-import bean.DestDBInfo;
-import bean.SrcDBInfo;
 import util.CommonUtil;
 import util.Constans;
 import util.DBUtil;
@@ -46,8 +39,6 @@ public class DataBasePanel extends JPanel {
 
 	JComboBox<String> db_src_type = null;
 	JComboBox<String> db_dest_type = null;
-	JComboBox<String> condition_columns = null;
-	JComboBox<String> pk_columns = null;
 
 	JTextField dest_ip_text = null;
 	JTextField dest_username_text = null;
@@ -61,12 +52,9 @@ public class DataBasePanel extends JPanel {
 	JTextField src_dbName_text = null;
 	JTextField src_tableName_text = null;
 
-	JTextField sequence_text = null;
-	JTextField condition_text = null;
-
-	JButton edit_Btn = null;
-
 	File dbFile = null;
+	
+	JButton edit_Btn = null;
 
 	Dimension dimension = new Dimension(200, 30);
 	/**
@@ -273,13 +261,8 @@ public class DataBasePanel extends JPanel {
 				String src_pw = String.valueOf(src_pw_text.getPassword());
 				String src_database = src_dbName_text.getText();
 				String src_table = src_tableName_text.getText();
-				if (DBUtil.checkConnection(src_db_type, src_ip, src_account, src_pw, src_database)) {
-					JOptionPane.showMessageDialog(up_panel, "資料庫連線成功", "資料庫連線測試", JOptionPane.INFORMATION_MESSAGE);
-				} else {
-					JOptionPane.showMessageDialog(up_panel, "資料庫連線失敗，請檢查設定！！", "資料庫連線測試", JOptionPane.ERROR_MESSAGE);
-				}
-				System.out.println("src_db_type=" + src_db_type + ",src_ip=" + src_ip + " ,src_account=" + src_account
-						+ " ,src_pw=" + src_pw + " ,src_database=" + src_database + " ,src_table=" + src_table);
+				logger.info("來源資料庫連線測試");
+				checkDBConnection("來源",up_panel,src_db_type, src_ip, src_account, src_pw, src_database, src_table);
 			}
 		});
 		dbinfo_src_panel.add(src_btn, gbSrc);
@@ -457,11 +440,9 @@ public class DataBasePanel extends JPanel {
 				String dest_pw = String.valueOf(dest_pw_text.getPassword());
 				String dest_database = dest_dbName_text.getText();
 				String dest_table = dest_tableName_text.getText();
-				if (DBUtil.checkConnection(dest_db_type, dest_ip, dest_account, dest_pw, dest_database)) {
-					JOptionPane.showMessageDialog(up_panel, "資料庫連線成功", "資料庫連線測試", JOptionPane.INFORMATION_MESSAGE);
-				} else {
-					JOptionPane.showMessageDialog(up_panel, "資料庫連線失敗，請檢查設定！！", "資料庫連線測試", JOptionPane.ERROR_MESSAGE);
-				}
+				logger.info("目標資料庫連線測試");
+				checkDBConnection("目標", up_panel, dest_db_type, dest_ip, dest_account, dest_pw, dest_database,
+						dest_table);
 			}
 		});
 		gbDest.gridx = 1;
@@ -473,84 +454,10 @@ public class DataBasePanel extends JPanel {
 		gbDest.fill = GridBagConstraints.NONE;
 		dbinfo_dest_panel.add(dest_btn, gbDest);
 		// -----------------------------------------------------
-		TitledBorder tb_sequence = BorderFactory.createTitledBorder("資料同步頻率");
-		tb_sequence.setTitleFont(Constans.titleFont);
-		tb_sequence.setTitleJustification(TitledBorder.LEFT);
-		JPanel sequence_panel = new JPanel();
-		gbMain.gridx = 0;
-		gbMain.gridy = 1;
-		gbMain.gridwidth = 1;
-		gbMain.gridheight = 1;
-		gbMain.weightx = 1;
-		gbMain.weighty = 0.2;
-		gbMain.fill = GridBagConstraints.HORIZONTAL;
-		add(sequence_panel, gbMain);
-		sequence_panel.setLayout(new FlowLayout(FlowLayout.LEFT));
-		sequence_panel.setBorder(tb_sequence);
-
-		JLabel sequence_label = new JLabel("間隔頻率:");
-		sequence_label.setFont(Constans.titleFont);
-		sequence_panel.add(sequence_label);
-
-		sequence_text = new JTextField();
-		sequence_text.setFont(Constans.textFont);
-		sequence_panel.add(sequence_text);
-		sequence_text.setColumns(10);
-
-		allTexts.add(sequence_text);
-
-		JLabel sequence_second_label = new JLabel(" 秒");
-		sequence_second_label.setFont(Constans.titleFont);
-		sequence_panel.add(sequence_second_label);
-
-		TitledBorder tb_condition = BorderFactory.createTitledBorder("程式判斷條件");
-		tb_condition.setTitleFont(Constans.titleFont);
-		tb_condition.setTitleJustification(TitledBorder.LEFT);
-
-		JPanel condition_panel = new JPanel();
-		gbMain.gridx = 0;
-		gbMain.gridy = 2;
-		gbMain.gridwidth = 1;
-		gbMain.gridheight = 1;
-		gbMain.weightx = 1;
-		gbMain.weighty = 0.2;
-		gbMain.fill = GridBagConstraints.HORIZONTAL;
-		add(condition_panel, gbMain);
-		condition_panel.setLayout(new FlowLayout(FlowLayout.LEFT));
-		condition_panel.setBorder(tb_condition);
-
-		JLabel src_condition_column_label = new JLabel("來源判斷欄位:");
-		src_condition_column_label.setFont(Constans.titleFont);
-		condition_panel.add(src_condition_column_label);
-
-		condition_columns = new JComboBox<String>();
-		condition_columns.setFont(Constans.textFont);
-		condition_columns.setMaximumSize(dimension);
-		condition_panel.add(condition_columns);
-
-		JLabel src_condition_label = new JLabel("判斷條件:");
-		src_condition_label.setFont(Constans.titleFont);
-		condition_panel.add(src_condition_label);
-
-		condition_text = new JTextField();
-		condition_text.setFont(Constans.textFont);
-		condition_panel.add(condition_text);
-		condition_text.setColumns(10);
-		
-		JLabel src_pk_label=new JLabel("來源主鍵:");
-		src_pk_label.setFont(Constans.titleFont);
-		condition_panel.add(src_pk_label);
-		
-		pk_columns = new JComboBox<String>();
-		pk_columns.setFont(Constans.textFont);
-		pk_columns.setMaximumSize(dimension);
-		condition_panel.add(pk_columns);
-		
-		allTexts.add(condition_text);
 
 		JPanel btn_panel = new JPanel();
 		gbMain.gridx = 0;
-		gbMain.gridy = 3;
+		gbMain.gridy = 2;
 		gbMain.gridwidth = 1;
 		gbMain.gridheight = 1;
 		gbMain.weightx = 1;
@@ -567,8 +474,8 @@ public class DataBasePanel extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				save();
-				if(dbFile!=null) {
-					reload();
+				if (dbFile != null) {
+					CommonUtil.reloadDB();
 				}
 				disableAll();
 			}
@@ -580,33 +487,7 @@ public class DataBasePanel extends JPanel {
 			if (Constans.dbproperty != null) {
 				dbFile = new File(Constans.dbproperty);
 				if (isFileExist(dbFile)) {
-					reload();
-				}
-			}
-			if (Constans.columnproperty != null) {
-				File columnFile = new File(Constans.columnproperty);
-				if (columnFile.exists()) {
-					Constans.srcColumns = new ArrayList<String>();
-					readColumn(columnFile);
-				}else {
-					logger.info(" 找不到 來源欄位設定，連線DB讀取欄位設定");
-					DBUtil.getSrcColumnsFromDB();
-					if(Constans.srcColumns!=null) {
-						for(int i=0;i<Constans.srcColumns.size();i++) {
-							if(condition_columns!=null) {
-								condition_columns.addItem(Constans.srcColumns.get(i));
-							}
-							if(pk_columns!=null) {
-								logger.info("pk_columns add "+Constans.srcColumns.get(i));
-								pk_columns.addItem(Constans.srcColumns.get(i));
-							}else {
-								logger.info("pk_columns is null");
-							}
-						}
-					}
-					else {
-						condition_columns.setSelectedItem("");
-					}
+					CommonUtil.reloadDB();
 				}
 			}
 		} catch (Exception e) {
@@ -639,12 +520,12 @@ public class DataBasePanel extends JPanel {
 
 	public void checkPassword(JPanel panel) {
 		logger.info("驗證密碼中");
-		if(dbFile!=null) {
-			reload();
+		if (dbFile != null) {
+			CommonUtil.reloadDB();
 			setDefaultText();
 		}
 		boolean result = CommonUtil.enterPassword(panel);
-		logger.info("result="+result);
+		//logger.info("result=" + result);
 		if (result) {
 			enableAll();
 		}
@@ -654,29 +535,25 @@ public class DataBasePanel extends JPanel {
 	}
 
 	public void disableAll() {
-		logger.info("disableAll");
+		//logger.info("disableAll");
 		for (int i = 0; i < allTexts.size(); i++) {
 			JTextField tempText = allTexts.get(i);
 			tempText.setEditable(false);
 		}
 		db_src_type.setEnabled(false);
 		db_dest_type.setEnabled(false);
-		condition_columns.setEnabled(false);
-		pk_columns.setEnabled(false);
 		edit_Btn.setEnabled(false);
 		isEdit = false;
 	}
 
 	public void enableAll() {
-		logger.info("enableAll");
+		//logger.info("enableAll");
 		for (int i = 0; i < allTexts.size(); i++) {
 			JTextField tempText = allTexts.get(i);
 			tempText.setEditable(true);
 		}
 		db_src_type.setEnabled(true);
 		db_dest_type.setEnabled(true);
-		condition_columns.setEnabled(true);
-		pk_columns.setEnabled(true);
 		edit_Btn.setEnabled(true);
 		isEdit = true;
 	}
@@ -696,29 +573,25 @@ public class DataBasePanel extends JPanel {
 			dest_dbName_text.setText(Constans.destDBInfo.getDbName());
 			dest_tableName_text.setText(Constans.destDBInfo.getTableName());
 		}
-		if(dbFile!=null && dbFile.exists()) {
+		if (dbFile != null && dbFile.exists()) {
 			db_src_type.setSelectedItem(Constans.srcDBInfo.getType());
 			db_dest_type.setSelectedItem(Constans.destDBInfo.getType());
-			condition_columns.setSelectedItem(Constans.condition_column);
-			pk_columns.setSelectedItem(Constans.pk_column);
-			sequence_text.setText(Constans.sequence_s);
-			condition_text.setText(Constans.condition);
 		}
 	}
 
 	public void save() {
 		SystemConfigUtil systemConfigUtil;
 		try {
-			if(dbFile!=null && dbFile.exists()) {
+			if (dbFile != null && dbFile.exists()) {
 				dbFile.delete();
-			}else {
-				dbFile=new File(Constans.dbproperty);
+			} else {
+				dbFile = new File(Constans.dbproperty);
 			}
-			
+
 			dbFile.getParentFile().mkdirs();
 			dbFile.createNewFile();
 			systemConfigUtil = new SystemConfigUtil(dbFile);
-			//儲存設定
+			// 儲存設定
 			systemConfigUtil.save("src.type", (String) db_src_type.getSelectedItem());
 			systemConfigUtil.save("src.ip", src_ip_text.getText());
 			systemConfigUtil.save("src.username", src_username_text.getText());
@@ -733,66 +606,10 @@ public class DataBasePanel extends JPanel {
 			systemConfigUtil.save("dest.dbname", dest_dbName_text.getText());
 			systemConfigUtil.save("dest.tablename", dest_tableName_text.getText());
 
-			systemConfigUtil.save("sequence", sequence_text.getText());
-			systemConfigUtil.save("condition", condition_text.getText());
-			systemConfigUtil.save("condition_column", (String) condition_columns.getSelectedItem());
-			systemConfigUtil.save("pk_column", (String) pk_columns.getSelectedItem());
-			//將檔案再加密
+			// 將檔案再加密
 			CommonUtil.encrypt(dbFile.getPath(), Constans.edit_pw);
 		} catch (Exception e) {
-			logger.error("DataBasePanel save error ",e);
-		}
-	}
-
-	public void reload() {
-		try {
-			File decodeDBFile = new File(dbFile.getParent() + File.separator
-					+ CommonUtil.getFileNameWithOutExtension(dbFile) + "_decode.txt");
-			if (dbFile.exists()) {
-				CommonUtil.decrypt(dbFile.getPath(), Constans.edit_pw);
-				SystemConfigUtil dbConfig = new SystemConfigUtil(decodeDBFile);
-				//decodeDBFile.delete();
-				Constans.srcDBInfo = new SrcDBInfo(dbConfig.get("src.type"), dbConfig.get("src.ip"),
-						dbConfig.get("src.username"), dbConfig.get("src.password"), dbConfig.get("src.dbname"),
-						dbConfig.get("src.tablename"));
-				Constans.destDBInfo = new DestDBInfo(dbConfig.get("dest.type"), dbConfig.get("dest.ip"),
-						dbConfig.get("dest.username"), dbConfig.get("dest.password"), dbConfig.get("dest.dbname"),
-						dbConfig.get("dest.tablename"));
-				Constans.sequence_s = dbConfig.get("sequence");
-				Constans.condition = dbConfig.get("condition");
-				Constans.condition_column = dbConfig.get("condition_column");
-				Constans.pk_column = dbConfig.get("pk_column");
-			}
-		} catch (Exception e) {
-			logger.error("DataBasePanel reload error", e);
-		}
-	}
-
-	public void readColumn(File columnFile) {
-		StringBuilder sb = new StringBuilder();
-		try (BufferedReader br = new BufferedReader(new FileReader(columnFile))) {
-			String line;
-			while ((line = br.readLine()) != null) {
-				sb.append(line);
-			}
-			String columns = sb.toString();
-			String[] columnsArray = columns.split(",");
-			if (Constans.srcColumns != null) {
-				for (int i = 0; i < columnsArray.length; i++) {
-					String temp = columnsArray[i];
-					Constans.srcColumns.add(temp);
-					if (condition_columns != null) {
-						condition_columns.addItem(temp);
-					}
-					if (pk_columns != null) {
-						pk_columns.addItem(temp);
-					}
-				}
-			}
-		} catch (FileNotFoundException e) {
-			logger.error("DataBasePanel readColumn error", e);
-		} catch (IOException e) {
-			logger.error("DataBasePanel readColumn error", e);
+			logger.error("DataBasePanel save error ", e);
 		}
 	}
 
@@ -800,11 +617,25 @@ public class DataBasePanel extends JPanel {
 		int answer = JOptionPane.showConfirmDialog(this, "尚未儲存設定，是否需要儲存", "儲存設定", JOptionPane.YES_NO_OPTION);
 		if (answer == JOptionPane.YES_OPTION) {
 			save();
-		}else {
-			isEdit=false;
+		} else {
+			isEdit = false;
 			logger.info("資料庫設定 不需存檔  設定為不可編輯");
 			setDefaultText();
 			disableAll();
+		}
+	}
+
+	public void checkDBConnection(String head, JPanel jpanel, String db_type, String db_ip, String db_account,
+			String db_pw, String db_database, String db_table) {
+		String msg = DBUtil.checkConnection(db_type, db_ip, db_account, db_pw, db_database, db_table);
+		if ("資料庫連線成功".equals(msg)) {
+			msg = head + msg;
+			logger.info(msg);
+			JOptionPane.showMessageDialog(jpanel, msg, "資料庫連線測試", JOptionPane.INFORMATION_MESSAGE);
+		} else {
+			msg = head + msg;
+			logger.error(msg);
+			JOptionPane.showMessageDialog(jpanel, msg, "資料庫連線測試", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 

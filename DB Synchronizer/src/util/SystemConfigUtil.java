@@ -78,4 +78,23 @@ public class SystemConfigUtil {
 			logger.error("SystemConfigUtil save error", e);
 		}
 	}
+	
+	public void saveCondition(String key, String value) {
+		FileOutputStream out;
+		try {
+			File dbFile = new File(Constans.conditionPath);
+			out = new FileOutputStream(dbFile);
+			if (properties != null) {
+				properties.setProperty(key, value);
+				properties.store(out, null);
+				out.close();
+			}
+		} catch (FileNotFoundException e) {
+			logger.error("SystemConfigUtil save error", e);
+		} catch (IOException e) {
+			logger.error("SystemConfigUtil save error", e);
+		} catch (Exception e) {
+			logger.error("SystemConfigUtil save error", e);
+		}
+	}
 }

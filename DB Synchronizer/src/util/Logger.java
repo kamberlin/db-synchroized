@@ -8,12 +8,13 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 
 public class Logger {
 	Class<?> handleClass;
 	SimpleDateFormat sf = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
 	Calendar calendar = Calendar.getInstance();
-	String logFolder=Constans.logproperty;
+	String logFolder = Constans.logproperty;
 
 	public Logger(Class<?> handleClass) {
 		super();
@@ -21,43 +22,45 @@ public class Logger {
 	}
 
 	public void info(String message) {
-		appendLog(" [INFO] " +handleClass.getName() +  " "+message);
+		appendLog(" [INFO] " + handleClass.getName() + " " + message);
 	}
 
 	public void error(String message) {
-		appendLog(" [ERROR] "+handleClass.getName() +  " "+message);
+		appendLog(" [ERROR] " + handleClass.getName() + " " + message);
 	}
 
 	public void error(String message, Exception e) {
-		appendLog(" [ERROR] "+handleClass.getName() + " "+message);
-		appendLog(" [ERROR] "+handleClass.getName() + " "+genErrorMsg(e));
+		appendLog(" [ERROR] " + handleClass.getName() + " " + message);
+		appendLog(" [ERROR] " + handleClass.getName() + " " + genErrorMsg(e));
 	}
+
 	public void debug(String message) {
-		appendLog(" [DEBUG] "+handleClass.getName() +  " "+message);
+		appendLog(" [DEBUG] " + handleClass.getName() + " " + message);
 	}
 
 	public void debug(String message, Exception e) {
-		appendLog(" [DEBUG] "+handleClass.getName() + " "+message);
-		appendLog(" [DEBUG] "+handleClass.getName() + " "+genErrorMsg(e));
+		appendLog(" [DEBUG] " + handleClass.getName() + " " + message);
+		appendLog(" [DEBUG] " + handleClass.getName() + " " + genErrorMsg(e));
 	}
 
 	public String getTime() {
-		return sf.format(calendar.getTime());
+		return sf.format(new Date());
 	}
 
 	public String getLogFilePath() {
 		String logFilePath = null;
 		if (logFolder != null) {
 			File folderFile = new File(logFolder);
-			if (folderFile.exists()) {
-				String year = "" + calendar.get(Calendar.YEAR);
-				String month = "" + (calendar.get(Calendar.MONTH) + 1);
-				if (month != null && month.length() < 2) {
-					month = "0" + month;
-				}
-				String date = "" + calendar.get(Calendar.DATE);
-				logFilePath = logFolder + File.separator + year + month + File.separator + year + month + date + ".log";
+			if (!folderFile.exists()) {
+				folderFile.mkdirs();
 			}
+			String year = "" + calendar.get(Calendar.YEAR);
+			String month = "" + (calendar.get(Calendar.MONTH) + 1);
+			if (month != null && month.length() < 2) {
+				month = "0" + month;
+			}
+			String date = "" + calendar.get(Calendar.DATE);
+			logFilePath = logFolder + File.separator + year + month + File.separator + year + month + date + ".log";
 		}
 		return logFilePath;
 	}
@@ -67,13 +70,13 @@ public class Logger {
 		try {
 			synchronized (Logger.class) {
 				System.out.println(getTime() + " " + message);
-				if(logFilePath!=null) {
+				if (logFilePath != null) {
 					File logFile = new File(logFilePath);
 					if (!logFile.exists()) {
 						logFile.getParentFile().mkdirs();
 						logFile.createNewFile();
 					}
-					OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(logFile,true),"UTF-8");
+					OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(logFile, true), "UTF-8");
 					out.append(getTime() + " " + message + " \r\n");
 					out.flush();
 					out.close();

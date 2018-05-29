@@ -34,7 +34,7 @@ public class ColumnSettingPanel extends JPanel {
 
 	private static Logger logger = LogManager.getLogger(ColumnSettingPanel.class);
 	boolean isLoad = false;
-	boolean isEdit=false;
+	boolean isEdit = false;
 	int columnLength = 0;
 
 	ArrayList<JComboBox<String>> srcJComboxs = null;
@@ -46,7 +46,7 @@ public class ColumnSettingPanel extends JPanel {
 
 	JPanel src_panel = null;
 	JPanel dest_panel = null;
-	JPanel main_panel=null;
+	JPanel main_panel = null;
 	JScrollPane srcScrollPanel = null;
 	JScrollPane destScrollPanel = null;
 
@@ -63,8 +63,8 @@ public class ColumnSettingPanel extends JPanel {
 
 		srcScrollPanel = new JScrollPane();
 		destScrollPanel = new JScrollPane();
-		
-		main_panel=new JPanel();
+
+		main_panel = new JPanel();
 		main_panel.setLayout(new FlowLayout());
 
 		TitledBorder tb_src = new TitledBorder("來源欄位設定");
@@ -108,7 +108,7 @@ public class ColumnSettingPanel extends JPanel {
 		gbl_src_layout.setConstraints(src_inputLabel, src_const);
 
 		main_panel.add(src_panel);
-		
+
 		TitledBorder tb_dest = new TitledBorder("目標欄位設定");
 		tb_dest.setTitleFont(Constans.titleFont);
 		tb_dest.setTitleJustification(TitledBorder.LEFT);
@@ -157,9 +157,9 @@ public class ColumnSettingPanel extends JPanel {
 		gbc_srcScrollPanel.fill = GridBagConstraints.BOTH;
 		gbc_srcScrollPanel.anchor = GridBagConstraints.NORTH;
 
-        main_panel.add(dest_panel);
-        srcScrollPanel.setViewportView(main_panel);
-        add(srcScrollPanel, gbc_srcScrollPanel);
+		main_panel.add(dest_panel);
+		srcScrollPanel.setViewportView(main_panel);
+		add(srcScrollPanel, gbc_srcScrollPanel);
 		edit_Btn = new JButton("修改設定");
 		edit_Btn.setPreferredSize(new Dimension(300, 100));
 		edit_Btn.setFont(Constans.textFont);
@@ -183,12 +183,8 @@ public class ColumnSettingPanel extends JPanel {
 		});
 	}
 
-	public void loadData() {
-		genSrcColumn();
-		genDestColumn();
-		disableAll();
-	}
 	public void loadAllData() {
+		getSrcColumnsFromDB();
 		getDestColumnsFromDB();
 		setColumnLength();
 		genSrcColumn();
@@ -199,16 +195,28 @@ public class ColumnSettingPanel extends JPanel {
 	public boolean getDestColumnsFromDB() {
 		boolean result = false;
 		if (DBUtil.checkAllNotEmpty(Constans.destDBInfo)) {
+			DBUtil.getDestColumnsFromDB();
 			if (Constans.destColumns == null || Constans.destColumns.size() == 0) {
-				DBUtil.getDestColumnsFromDB();
-				if (Constans.destColumns == null || Constans.destColumns.size() == 0) {
-					JOptionPane.showMessageDialog(this, "目標資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
-					logger.info("目標資料庫設定不正確，請檢查資料庫設定");
-				}
+				JOptionPane.showMessageDialog(this, "目標資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
+				logger.info("目標資料庫設定不正確，請檢查資料庫設定");
 			}
 		} else {
 			JOptionPane.showMessageDialog(this, "目標資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
 			logger.info("目標資料庫設定不正確，請檢查資料庫設定");
+		}
+		return result;
+	}
+	public boolean getSrcColumnsFromDB() {
+		boolean result = false;
+		if (DBUtil.checkAllNotEmpty(Constans.srcDBInfo)) {
+			DBUtil.getSrcColumnsFromDB();
+			if (Constans.srcColumns == null || Constans.srcColumns.size() == 0) {
+				JOptionPane.showMessageDialog(this, "來源資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
+				logger.info("來源資料庫設定不正確，請檢查資料庫設定");
+			}
+		} else {
+			JOptionPane.showMessageDialog(this, "來源資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
+			logger.info("來源資料庫設定不正確，請檢查資料庫設定");
 		}
 		return result;
 	}
@@ -229,11 +237,12 @@ public class ColumnSettingPanel extends JPanel {
 	public void genSrcColumn() {
 		try {
 			if (Constans.srcColumns != null) {
-				//加密檔案
+				// 加密檔案
 				File column_file = new File(Constans.columnSettingPath);
-				//解密檔案
-				File columnDecode = new File(column_file.getParent() + File.separator+CommonUtil.getFileNameWithOutExtension(column_file) + "_decode.txt");
-				if(column_file.exists()) {
+				// 解密檔案
+				File columnDecode = new File(column_file.getParent() + File.separator
+						+ CommonUtil.getFileNameWithOutExtension(column_file) + "_decode.txt");
+				if (column_file.exists()) {
 					CommonUtil.decrypt(column_file.getPath(), Constans.edit_pw);
 					if (columnDecode.exists()) {
 						CommonUtil.readColumnFile(columnDecode);
@@ -242,7 +251,7 @@ public class ColumnSettingPanel extends JPanel {
 				}
 				src_panel.removeAll();
 				for (int i = 0; i < columnLength; i++) {
-					if(srcJComboxs ==null) {
+					if (srcJComboxs == null) {
 						srcJComboxs = new ArrayList<JComboBox<String>>();
 					}
 					if (srcJTextField == null) {
@@ -259,7 +268,8 @@ public class ColumnSettingPanel extends JPanel {
 						}
 						tempJComboBox.addItem(Constans.srcColumns.get(j));
 					}
-					if(Constans.columnList!=null && i<Constans.columnList.size() &&  Constans.columnList.get(i)!=null) {
+					if (Constans.columnList != null && i < Constans.columnList.size()
+							&& Constans.columnList.get(i) != null) {
 						tempJComboBox.setSelectedItem(Constans.columnList.get(i).getSrcColumn());
 						textField.setText(Constans.columnList.get(i).getSrcContent());
 					}
@@ -267,14 +277,14 @@ public class ColumnSettingPanel extends JPanel {
 					textField.setEditable(false);
 					JLabel noLabel = new JLabel("" + (i + 1));
 					noLabel.setFont(Constans.textFont);
-					if(i<srcJComboxs.size() && srcJComboxs.get(i)!=null) {
-						srcJComboxs.set(i,tempJComboBox);
-					}else {
+					if (i < srcJComboxs.size() && srcJComboxs.get(i) != null) {
+						srcJComboxs.set(i, tempJComboBox);
+					} else {
 						srcJComboxs.add(tempJComboBox);
 					}
-					if(i<srcJTextField.size() && srcJTextField.get(i)!=null) {
-						srcJTextField.set(i,textField);
-					}else {
+					if (i < srcJTextField.size() && srcJTextField.get(i) != null) {
+						srcJTextField.set(i, textField);
+					} else {
 						srcJTextField.add(textField);
 					}
 					src_panel.add(noLabel);
@@ -305,7 +315,7 @@ public class ColumnSettingPanel extends JPanel {
 				logger.info("srcColumns is null");
 			}
 		} catch (Exception e) {
-			logger.error("ColumnSetting genSrcColumn error",e);
+			logger.error("ColumnSetting genSrcColumn error", e);
 		}
 	}
 
@@ -313,10 +323,10 @@ public class ColumnSettingPanel extends JPanel {
 		if (Constans.destColumns != null) {
 			dest_panel.removeAll();
 			for (int i = 0; i < columnLength; i++) {
-				if(destJComboxs==null) {
+				if (destJComboxs == null) {
 					destJComboxs = new ArrayList<JComboBox<String>>();
 				}
-				if(destJTextField ==null) {
+				if (destJTextField == null) {
 					destJTextField = new ArrayList<JTextField>();
 				}
 				JComboBox<String> tempJComboBox = new JComboBox<String>();
@@ -330,7 +340,8 @@ public class ColumnSettingPanel extends JPanel {
 					}
 					tempJComboBox.addItem(Constans.destColumns.get(j));
 				}
-				if(Constans.columnList!=null && i<Constans.columnList.size() && Constans.columnList.get(i)!=null) {
+				if (Constans.columnList != null && i < Constans.columnList.size()
+						&& Constans.columnList.get(i) != null) {
 					tempJComboBox.setSelectedItem(Constans.columnList.get(i).getDestColumn());
 					textField.setText(Constans.columnList.get(i).getDestContent());
 				}
@@ -338,14 +349,14 @@ public class ColumnSettingPanel extends JPanel {
 				textField.setEditable(false);
 				JLabel noLabel = new JLabel("" + (i + 1));
 				noLabel.setFont(Constans.textFont);
-				if(i<destJComboxs.size() && destJComboxs.get(i)!=null) {
-					destJComboxs.set(i,tempJComboBox);
-				}else {
+				if (i < destJComboxs.size() && destJComboxs.get(i) != null) {
+					destJComboxs.set(i, tempJComboBox);
+				} else {
 					destJComboxs.add(tempJComboBox);
 				}
-				if(i<destJTextField.size() && destJTextField.get(i)!=null) {
-					destJTextField.set(i,textField);
-				}else {
+				if (i < destJTextField.size() && destJTextField.get(i) != null) {
+					destJTextField.set(i, textField);
+				} else {
 					destJTextField.add(textField);
 				}
 				dest_panel.add(noLabel);
@@ -387,7 +398,7 @@ public class ColumnSettingPanel extends JPanel {
 				}
 				FileWriter fw = new FileWriter(column_file);
 				String sign = ",";
-				logger.info("srcComboBox length="+srcJComboxs.size());
+				logger.info("srcComboBox length=" + srcJComboxs.size());
 				for (int i = 0; i < srcJComboxs.size(); i++) {
 					String srcColumn = null;
 					String destColumn = null;
@@ -416,79 +427,83 @@ public class ColumnSettingPanel extends JPanel {
 				fw.close();
 				CommonUtil.encrypt(Constans.columnSettingPath, Constans.edit_pw);
 			} catch (Exception e) {
-				logger.error("ColumnSetting save error",e);
+				logger.error("ColumnSetting save error", e);
 			}
 		}
 		disableAll();
 	}
+
 	public void checkPassword() {
-		if(CommonUtil.enterPassword(this)) {
+		if (CommonUtil.enterPassword(this)) {
 			enableAll();
 		}
 	}
+
 	public void enableAll() {
-		if(srcJComboxs!=null) {
-			for(int i=0;i<srcJComboxs.size();i++) {
+		if (srcJComboxs != null) {
+			for (int i = 0; i < srcJComboxs.size(); i++) {
 				JComboBox<String> tempJCombo = srcJComboxs.get(i);
 				tempJCombo.setEnabled(true);
 			}
 		}
-		if(destJComboxs!=null) {
-			for(int i=0;i<destJComboxs.size();i++) {
+		if (destJComboxs != null) {
+			for (int i = 0; i < destJComboxs.size(); i++) {
 				JComboBox<String> tempJCombo = destJComboxs.get(i);
 				tempJCombo.setEnabled(true);
 			}
 		}
-		if(srcJTextField!=null) {
-			for(int i=0;i<srcJTextField.size();i++) {
+		if (srcJTextField != null) {
+			for (int i = 0; i < srcJTextField.size(); i++) {
 				JTextField tempField = srcJTextField.get(i);
 				tempField.setEditable(true);
 			}
-		}		
-		if(destJTextField!=null) {
-			for(int i=0;i<destJTextField.size();i++) {
+		}
+		if (destJTextField != null) {
+			for (int i = 0; i < destJTextField.size(); i++) {
 				JTextField tempField = destJTextField.get(i);
 				tempField.setEditable(true);
 			}
 		}
 		edit_Btn.setEnabled(true);
-        isEdit=true;
+		isEdit = true;
 	}
+
 	public void disableAll() {
-		if(srcJComboxs!=null) {
-			for(int i=0;i<srcJComboxs.size();i++) {
+		if (srcJComboxs != null) {
+			for (int i = 0; i < srcJComboxs.size(); i++) {
 				JComboBox<String> tempJCombo = srcJComboxs.get(i);
 				tempJCombo.setEnabled(false);
 			}
 		}
-		if(destJComboxs!=null) {
-			for(int i=0;i<destJComboxs.size();i++) {
+		if (destJComboxs != null) {
+			for (int i = 0; i < destJComboxs.size(); i++) {
 				JComboBox<String> tempJCombo = destJComboxs.get(i);
 				tempJCombo.setEnabled(false);
 			}
 		}
-		if(srcJTextField!=null) {
-			for(int i=0;i<srcJTextField.size();i++) {
+		if (srcJTextField != null) {
+			for (int i = 0; i < srcJTextField.size(); i++) {
 				JTextField tempField = srcJTextField.get(i);
 				tempField.setEditable(false);
 			}
-		}		
-		if(destJTextField!=null) {
-			for(int i=0;i<destJTextField.size();i++) {
+		}
+		if (destJTextField != null) {
+			for (int i = 0; i < destJTextField.size(); i++) {
 				JTextField tempField = destJTextField.get(i);
 				tempField.setEditable(false);
 			}
 		}
 		edit_Btn.setEnabled(false);
-        isEdit=false;
+		isEdit = false;
 	}
+
 	public void askSave() {
-		int answer=JOptionPane.showConfirmDialog(this, "尚未儲存設定，是否需要儲存", "儲存設定", JOptionPane.YES_NO_OPTION);
-		if(answer==JOptionPane.YES_OPTION) {
+		int answer = JOptionPane.showConfirmDialog(this, "尚未儲存設定，是否需要儲存", "儲存設定", JOptionPane.YES_NO_OPTION);
+		if (answer == JOptionPane.YES_OPTION) {
 			save();
-		}else {
-			isEdit=false;
-			loadData();
+		} else {
+			isEdit = false;
+			loadAllData();
 		}
 	}
 

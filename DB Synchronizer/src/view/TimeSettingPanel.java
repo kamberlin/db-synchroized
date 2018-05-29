@@ -220,7 +220,6 @@ public class TimeSettingPanel extends JPanel {
 			if (srcDownJComboxs == null) {
 				srcDownJComboxs = new ArrayList<JComboBox<String>>();
 			}
-			String previosSrc = "";
 			for (int i = 0; i < totalColumnNum; i++) {
 				GridBagConstraints gb = new GridBagConstraints();
 				JLabel srcUp_Label = new JLabel("來源時間欄位:");
@@ -276,18 +275,15 @@ public class TimeSettingPanel extends JPanel {
 						srcUpJComboBox.setSelectedItem(transfeBean.getSrcColumn());
 					}
 				}
-				if (Constans.timeDownList != null && i < Constans.timeDownList.size()
-						&& Constans.timeDownList.get(i) != null) {
-					transfeBean = Constans.timeDownList.get(i);
+				int num = i * 2;
+				if (Constans.timeDownList != null && num < Constans.timeDownList.size()
+						&& Constans.timeDownList.get(num) != null) {
+					transfeBean = Constans.timeDownList.get(num);
 					if ((!"".equals(transfeBean.getSrcColumn())
 							&& !Constans.defaultJComboBoxText.equals(transfeBean.getDestTimeYMDFormat()))
 							|| (!Constans.defaultJComboBoxText.equals(transfeBean.getSrcColumn())
-									&& !Constans.defaultJComboBoxText
-											.equals(transfeBean.getDestTimeHMSFormat()))) {
-						if (!previosSrc.equals(transfeBean.getSrcColumn())) {
-							srcDownJComboBox.setSelectedItem(transfeBean.getSrcColumn());
-							previosSrc = transfeBean.getSrcColumn();
-						}
+									&& !Constans.defaultJComboBoxText.equals(transfeBean.getDestTimeHMSFormat()))) {
+						srcDownJComboBox.setSelectedItem(transfeBean.getSrcColumn());
 					}
 				}
 			}

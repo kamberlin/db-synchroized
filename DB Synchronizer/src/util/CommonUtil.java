@@ -83,16 +83,19 @@ public class CommonUtil {
 					String[] columns = line.split(",");
 					if (columns != null && columns.length == 4) {
 						TransferBean transfer = new TransferBean(columns[0], columns[1], columns[2], columns[3].trim());
+						//一般欄位
 						if (!"".equals(transfer.getSrcColumn()) && !"".equals(transfer.getDestColumn())) {
 							Constans.columnList.add(transfer);
-						} else if ("".equals(transfer.getSrcColumn()) && !"".equals(transfer.getDestColumn())
-								&& !"".equals(transfer.getDestContent())) {
+						}
+						//固定寫入值欄位
+						else if ("".equals(transfer.getSrcColumn()) && !"".equals(transfer.getDestColumn())) {
 							Constans.columnList.add(transfer);
-						} else if (!"".equals(transfer.getSrcColumn()) && !"".equals(transfer.getSrcContent())
+						}
+						//寫入後來源更新欄位
+						else if (!"".equals(transfer.getSrcColumn()) && !"".equals(transfer.getSrcContent())
 								&& "".equals(transfer.getDestColumn())) {
 							Constans.columnList.add(transfer);
 						} else {
-							// logger.info(line);
 						}
 					} else {
 						logger.info("not add " + line);
@@ -236,20 +239,18 @@ public class CommonUtil {
 			Constans.dbproperty = Constans.rootPath + File.separator + File.separator + "data" + File.separator
 					+ "db.properties";
 			Constans.logproperty = Constans.rootPath + File.separator + "log";
-			Constans.columnproperty = Constans.rootPath + File.separator + File.separator + "etc" + File.separator
-					+ "columns.txt";
+			Constans.conditionPath = Constans.rootPath + File.separator + File.separator + "data" + File.separator
+					+ "condition.properties";
 			Constans.timeUpPath = Constans.rootPath + File.separator + "data" + File.separator + "timeUp.bin";
 			Constans.timeDownPath = Constans.rootPath + File.separator + "data" + File.separator + "timeDown.bin";
 			Constans.columnSettingPath = Constans.rootPath + File.separator + "data" + File.separator
 					+ "column_setting.bin";
-			reload(Constans.dbproperty);
-			if (Constans.columnproperty != null) {
-				File columnFile = new File(Constans.columnproperty);
-				if (columnFile.exists()) {
-					Constans.srcColumns = new ArrayList<String>();
-					getColumns(columnFile);
-				}
-			}
+			//重新載入db設定
+			reloadDB();
+			
+			//重新載入執行設定
+			reloadCondition();
+			
 			logger = LogManager.getLogger(CommonUtil.class);
 		} catch (Exception e) {
 			logger.error("無法正確載入參數");
@@ -257,47 +258,51 @@ public class CommonUtil {
 			logger.error("CommonUtil init ", e);
 		}
 	}
-
-	public static void getColumns(File columnFile) {
-		StringBuilder sb = new StringBuilder();
-		try (BufferedReader br = new BufferedReader(new FileReader(columnFile))) {
-			String line;
-			while ((line = br.readLine()) != null) {
-				sb.append(line);
-			}
-			String columns = sb.toString();
-			String[] columnsArray = columns.split(",");
-			if (Constans.srcColumns != null) {
-				for (int i = 0; i < columnsArray.length; i++) {
-					String temp = columnsArray[i];
-					Constans.srcColumns.add(temp);
+	public static boolean isFileExist(File tempFile) {
+		boolean result = false;
+		if (tempFile != null && tempFile.exists()) {
+			result = true;
+		}
+		return result;
+	}
+	public static void reloadDB() {
+		try {
+			if(Constans.dbproperty!=null) {
+				File dbFile = new File(Constans.dbproperty);
+				File decodeDBFile = new File(dbFile.getParent() + File.separator
+						+ CommonUtil.getFileNameWithOutExtension(dbFile) + "_decode.txt");
+				if (dbFile.exists()) {
+					CommonUtil.decrypt(dbFile.getPath(), Constans.edit_pw);
+					SystemConfigUtil dbConfig = new SystemConfigUtil(decodeDBFile);
+					decodeDBFile.delete();
+					Constans.srcDBInfo = new SrcDBInfo(dbConfig.get("src.type"), dbConfig.get("src.ip"),
+							dbConfig.get("src.username"), dbConfig.get("src.password"), dbConfig.get("src.dbname"),
+							dbConfig.get("src.tablename"));
+					Constans.destDBInfo = new DestDBInfo(dbConfig.get("dest.type"), dbConfig.get("dest.ip"),
+							dbConfig.get("dest.username"), dbConfig.get("dest.password"), dbConfig.get("dest.dbname"),
+							dbConfig.get("dest.tablename"));
 				}
 			}
-		} catch (FileNotFoundException e) {
-			logger.error("CommonUtil getColumns error", e);
-		} catch (IOException e) {
-			logger.error("CommonUtil getColumns error", e);
+		} catch (Exception e) {
+			logger.error("CommonUtil reload error", e);
 		}
 	}
-
-	public static void reload(String dbFilePath) {
+	public static void reloadCondition() {
 		try {
-			File dbFile = new File(dbFilePath);
-			File decodeDBFile = new File(dbFile.getParent() + File.separator
-					+ CommonUtil.getFileNameWithOutExtension(dbFile) + "_decode.txt");
-			if (dbFile.exists()) {
-				CommonUtil.decrypt(dbFile.getPath(), Constans.edit_pw);
-				SystemConfigUtil dbConfig = new SystemConfigUtil(decodeDBFile);
-				decodeDBFile.delete();
-				Constans.srcDBInfo = new SrcDBInfo(dbConfig.get("src.type"), dbConfig.get("src.ip"),
-						dbConfig.get("src.username"), dbConfig.get("src.password"), dbConfig.get("src.dbname"),
-						dbConfig.get("src.tablename"));
-				Constans.destDBInfo = new DestDBInfo(dbConfig.get("dest.type"), dbConfig.get("dest.ip"),
-						dbConfig.get("dest.username"), dbConfig.get("dest.password"), dbConfig.get("dest.dbname"),
-						dbConfig.get("dest.tablename"));
-				Constans.sequence_s = dbConfig.get("sequence");
-				Constans.condition = dbConfig.get("condition");
-				Constans.condition_column = dbConfig.get("condition_column");
+			if(Constans.conditionPath!=null) {
+				File conditionFile = new File(Constans.conditionPath);
+				File decodeConditionFile = new File(conditionFile.getParent() + File.separator
+						+ CommonUtil.getFileNameWithOutExtension(conditionFile) + "_decode.txt");
+				if (conditionFile.exists()) {
+					CommonUtil.decrypt(conditionFile.getPath(), Constans.edit_pw);
+					SystemConfigUtil conditionConfig = new SystemConfigUtil(decodeConditionFile);
+					decodeConditionFile.delete();
+					
+					Constans.sequence_s = conditionConfig.get("sequence");
+					Constans.condition = conditionConfig.get("condition");
+					Constans.condition_column = conditionConfig.get("condition_column");
+					Constans.pk_column = conditionConfig.get("pk_column");
+				}
 			}
 		} catch (Exception e) {
 			logger.error("CommonUtil reload error", e);
