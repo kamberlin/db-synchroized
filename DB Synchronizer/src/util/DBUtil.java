@@ -4,8 +4,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
-
 import util.LogManager;
 import util.Logger;
 import bean.DestDBInfo;
@@ -178,6 +176,7 @@ public class DBUtil {
 				logger.error("DBUtil checkTableExist error " + e1.getMessage());
 			}
 		}
+		//daoSQL 由外部呼叫部份關閉
 		return isExist;
 	}
 
@@ -197,12 +196,9 @@ public class DBUtil {
 					ps.setString(1, Constans.destDBInfo.getTableName());
 				}
 				ResultSet rs = ps.executeQuery();
-				boolean hasData = false;
 				while (rs.next()) {
 					Constans.destColumns.add(rs.getString("COLUMN_NAME"));
-					hasData = true;
 				}
-				//logger.info("目標資料庫取得欄位 hasData=" + hasData);
 				daoSQL.close();
 			} catch (SQLException se) {
 				logger.error("DBUtil getDestColumnsFromDB error", se);

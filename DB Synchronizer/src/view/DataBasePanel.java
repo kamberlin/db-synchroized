@@ -53,7 +53,7 @@ public class DataBasePanel extends JPanel {
 	JTextField src_tableName_text = null;
 
 	File dbFile = null;
-	
+
 	JButton edit_Btn = null;
 
 	Dimension dimension = new Dimension(200, 30);
@@ -262,7 +262,7 @@ public class DataBasePanel extends JPanel {
 				String src_database = src_dbName_text.getText();
 				String src_table = src_tableName_text.getText();
 				logger.info("來源資料庫連線測試");
-				checkDBConnection("來源",up_panel,src_db_type, src_ip, src_account, src_pw, src_database, src_table);
+				checkDBConnection("來源", up_panel, src_db_type, src_ip, src_account, src_pw, src_database, src_table);
 			}
 		});
 		dbinfo_src_panel.add(src_btn, gbSrc);
@@ -473,11 +473,10 @@ public class DataBasePanel extends JPanel {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				save();
-				if (dbFile != null) {
+				if(save()) {
 					CommonUtil.reloadDB();
+					disableAll();
 				}
-				disableAll();
 			}
 		});
 	}
@@ -495,21 +494,6 @@ public class DataBasePanel extends JPanel {
 		}
 	}
 
-	public boolean checkClassPathPropertiesExist(String propertyName) {
-		boolean result = false;
-		try {
-			URL url = this.getClass().getClassLoader().getResource(propertyName);
-			if (url != null && url.toURI() != null && url.toURI().getPath() != null) {
-				String filePath = url.toURI().getPath();
-				File tempFile = new File(filePath);
-				result = tempFile.exists();
-			}
-		} catch (URISyntaxException e) {
-			logger.error("DataBasePanel checkClassPathPropertiesExist error", e);
-		}
-		return result;
-	}
-
 	public boolean isFileExist(File tempFile) {
 		boolean result = false;
 		if (tempFile != null && tempFile.exists()) {
@@ -525,7 +509,7 @@ public class DataBasePanel extends JPanel {
 			setDefaultText();
 		}
 		boolean result = CommonUtil.enterPassword(panel);
-		//logger.info("result=" + result);
+		// logger.info("result=" + result);
 		if (result) {
 			enableAll();
 		}
@@ -535,7 +519,7 @@ public class DataBasePanel extends JPanel {
 	}
 
 	public void disableAll() {
-		//logger.info("disableAll");
+		// logger.info("disableAll");
 		for (int i = 0; i < allTexts.size(); i++) {
 			JTextField tempText = allTexts.get(i);
 			tempText.setEditable(false);
@@ -547,7 +531,7 @@ public class DataBasePanel extends JPanel {
 	}
 
 	public void enableAll() {
-		//logger.info("enableAll");
+		// logger.info("enableAll");
 		for (int i = 0; i < allTexts.size(); i++) {
 			JTextField tempText = allTexts.get(i);
 			tempText.setEditable(true);
@@ -579,50 +563,61 @@ public class DataBasePanel extends JPanel {
 		}
 	}
 
-	public void save() {
+	public boolean save() {
+		boolean result=false;
 		SystemConfigUtil systemConfigUtil;
 		try {
-			if (dbFile != null && dbFile.exists()) {
-				dbFile.delete();
+			if (!checkColumns()) {
+				JOptionPane.showMessageDialog(this, "資料庫設定欄位有空值", "資料庫設定資料驗證", JOptionPane.ERROR_MESSAGE);
 			} else {
-				dbFile = new File(Constans.dbproperty);
+				if (dbFile != null && dbFile.exists()) {
+					dbFile.delete();
+				} else {
+					dbFile = new File(Constans.dbproperty);
+				}
+
+				dbFile.getParentFile().mkdirs();
+				dbFile.createNewFile();
+				systemConfigUtil = new SystemConfigUtil(dbFile);
+				// 儲存設定
+				systemConfigUtil.save("src.type", (String) db_src_type.getSelectedItem());
+				systemConfigUtil.save("src.ip", src_ip_text.getText());
+				systemConfigUtil.save("src.username", src_username_text.getText());
+				systemConfigUtil.save("src.password", String.valueOf(src_pw_text.getPassword()));
+				systemConfigUtil.save("src.dbname", src_dbName_text.getText());
+				systemConfigUtil.save("src.tablename", src_tableName_text.getText());
+
+				systemConfigUtil.save("dest.type", (String) db_dest_type.getSelectedItem());
+				systemConfigUtil.save("dest.ip", dest_ip_text.getText());
+				systemConfigUtil.save("dest.username", dest_username_text.getText());
+				systemConfigUtil.save("dest.password", String.valueOf(dest_pw_text.getPassword()));
+				systemConfigUtil.save("dest.dbname", dest_dbName_text.getText());
+				systemConfigUtil.save("dest.tablename", dest_tableName_text.getText());
+
+				// 將檔案再加密
+				CommonUtil.encrypt(dbFile.getPath(), Constans.edit_pw);
+				result=true;
 			}
-
-			dbFile.getParentFile().mkdirs();
-			dbFile.createNewFile();
-			systemConfigUtil = new SystemConfigUtil(dbFile);
-			// 儲存設定
-			systemConfigUtil.save("src.type", (String) db_src_type.getSelectedItem());
-			systemConfigUtil.save("src.ip", src_ip_text.getText());
-			systemConfigUtil.save("src.username", src_username_text.getText());
-			systemConfigUtil.save("src.password", String.valueOf(src_pw_text.getPassword()));
-			systemConfigUtil.save("src.dbname", src_dbName_text.getText());
-			systemConfigUtil.save("src.tablename", src_tableName_text.getText());
-
-			systemConfigUtil.save("dest.type", (String) db_dest_type.getSelectedItem());
-			systemConfigUtil.save("dest.ip", dest_ip_text.getText());
-			systemConfigUtil.save("dest.username", dest_username_text.getText());
-			systemConfigUtil.save("dest.password", String.valueOf(dest_pw_text.getPassword()));
-			systemConfigUtil.save("dest.dbname", dest_dbName_text.getText());
-			systemConfigUtil.save("dest.tablename", dest_tableName_text.getText());
-
-			// 將檔案再加密
-			CommonUtil.encrypt(dbFile.getPath(), Constans.edit_pw);
 		} catch (Exception e) {
 			logger.error("DataBasePanel save error ", e);
 		}
+		return result;
 	}
 
 	public void askSave() {
 		int answer = JOptionPane.showConfirmDialog(this, "尚未儲存設定，是否需要儲存", "儲存設定", JOptionPane.YES_NO_OPTION);
 		if (answer == JOptionPane.YES_OPTION) {
-			save();
+			if(!save()) {
+				logger.info("資料庫設定 欄位設定有空值 無法存檔  載入前次設定");
+				setDefaultText();
+				disableAll();
+			}
 		} else {
-			isEdit = false;
 			logger.info("資料庫設定 不需存檔  設定為不可編輯");
 			setDefaultText();
 			disableAll();
 		}
+		isEdit = false;
 	}
 
 	public void checkDBConnection(String head, JPanel jpanel, String db_type, String db_ip, String db_account,
@@ -637,6 +632,45 @@ public class DataBasePanel extends JPanel {
 			logger.error(msg);
 			JOptionPane.showMessageDialog(jpanel, msg, "資料庫連線測試", JOptionPane.ERROR_MESSAGE);
 		}
+	}
+
+	public boolean checkColumns() {
+		boolean result = true;
+
+		if ("".equals((String) db_src_type.getSelectedItem())) {
+			return false;
+		}
+		if ("".equals(src_ip_text.getText())) {
+			return false;
+		}
+		if ("".equals(src_username_text.getText())) {
+			return false;
+		}
+		if ("".equals(src_dbName_text.getText())) {
+			return false;
+		}
+		if ("".equals(src_tableName_text.getText())) {
+			return false;
+		}
+		if ("".equals((String) db_dest_type.getSelectedItem())) {
+			return false;
+		}
+		if ("".equals(dest_ip_text.getText())) {
+			return false;
+		}
+		if ("".equals(dest_username_text.getText())) {
+			return false;
+		}
+		if ("".equals(String.valueOf(dest_pw_text.getPassword()))) {
+			return false;
+		}
+		if ("".equals(dest_dbName_text.getText())) {
+			return false;
+		}
+		if ("".equals(dest_tableName_text.getText())) {
+			return false;
+		}
+		return result;
 	}
 
 }

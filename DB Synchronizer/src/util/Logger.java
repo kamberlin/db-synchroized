@@ -12,7 +12,7 @@ import java.util.Date;
 
 public class Logger {
 	Class<?> handleClass;
-	SimpleDateFormat sf = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
+	SimpleDateFormat sf = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss:SSS");
 	Calendar calendar = Calendar.getInstance();
 	String logFolder = Constans.logproperty;
 
@@ -54,6 +54,7 @@ public class Logger {
 			if (!folderFile.exists()) {
 				folderFile.mkdirs();
 			}
+			calendar.setTime(new Date());
 			String year = "" + calendar.get(Calendar.YEAR);
 			String month = "" + (calendar.get(Calendar.MONTH) + 1);
 			if (month != null && month.length() < 2) {

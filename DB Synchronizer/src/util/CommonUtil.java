@@ -1,5 +1,6 @@
 package util;
 
+import java.awt.GridLayout;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,8 +22,10 @@ import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESKeySpec;
 import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 
 import util.Logger;
 import bean.DestDBInfo;
@@ -158,14 +161,20 @@ public class CommonUtil {
 
 	public static boolean enterPassword(JPanel panel) {
 		boolean result = false;
-		String password = JOptionPane.showInputDialog(panel, "請輸入修改密碼", "密碼驗證", JOptionPane.QUESTION_MESSAGE);
-		if (password != null) {
+		JPanel password_panel = new JPanel(new GridLayout(2, 1));
+		 JPasswordField pwd = new JPasswordField(10);
+		 JLabel label = new JLabel("請輸入修改密碼");
+		 password_panel.add(label);
+		 password_panel.add(pwd);
+        int action = JOptionPane.showConfirmDialog(null, password_panel,"密碼驗證",JOptionPane.OK_CANCEL_OPTION);
+        if(action==JOptionPane.YES_OPTION) {
+        	String password=String.valueOf(pwd.getPassword());
 			if (Constans.edit_pw.equals(password)) {
 				result = true;
 			} else {
 				JOptionPane.showMessageDialog(panel, "密碼輸入錯誤，請重新輸入!!", "驗證失敗", JOptionPane.ERROR_MESSAGE);
 			}
-		}
+        }
 		return result;
 	}
 
@@ -307,34 +316,5 @@ public class CommonUtil {
 		} catch (Exception e) {
 			logger.error("CommonUtil reload error", e);
 		}
-	}
-
-	public static boolean checkClassPathPropertiesExist(String propertyName) {
-		boolean result = false;
-		try {
-			if (propertyName != null) {
-				if (propertyName.startsWith("../")) {
-					File testFile = new File(propertyName);
-					if (testFile.exists()) {
-						result = true;
-					}
-				} else {
-					URL url = CommonUtil.class.getClassLoader().getResource(propertyName);
-					if (url != null && url.toURI() != null && url.toURI().getPath() != null) {
-						String filePath = url.toURI().getPath();
-						File tempFile = new File(filePath);
-						result = tempFile.exists();
-					} else {
-						File testFile = new File(propertyName);
-						if (testFile.exists()) {
-							result = true;
-						}
-					}
-				}
-			}
-		} catch (URISyntaxException e) {
-			logger.error("CommonUtil checkClassPathPropertiesExist error", e);
-		}
-		return result;
 	}
 }

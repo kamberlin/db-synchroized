@@ -24,7 +24,7 @@ public class TransferThread extends Thread {
 	boolean running = true;
 	JLabel statusTextLabel = null;
 	JTextArea textArea = null;
-	boolean hasPK=false;
+	boolean hasPK = false;
 	SimpleDateFormat sf = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
 	ArrayList<TransferBean> allTransfer = new ArrayList<TransferBean>();
 
@@ -78,7 +78,7 @@ public class TransferThread extends Thread {
 		for (int j = 0; j < allTransfer.size(); j++) {
 			TransferBean transferBean = allTransfer.get(j);
 			if (Constans.pk_column.equals(transferBean.getSrcColumn())) {
-				hasPK=true;
+				hasPK = true;
 			}
 		}
 		srcColumns = new ArrayList<String>();
@@ -114,8 +114,8 @@ public class TransferThread extends Thread {
 					srcSQL.append(",");
 				}
 			}
-			if(!hasPK) {
-				srcSQL.append(","+Constans.pk_column);
+			if (!hasPK) {
+				srcSQL.append("," + Constans.pk_column);
 			}
 			for (int i = 0; i < destColumns.size(); i++) {
 				destSQL.append(destColumns.get(i));
@@ -142,13 +142,22 @@ public class TransferThread extends Thread {
 			logger.info("condition=" + Constans.condition);
 			ResultSet srcRS = srcPS.executeQuery();
 			String updateSrcSQL = "UPDATE " + Constans.srcDBInfo.getTableName() + " SET ";
-			boolean updateSQLFinished = false;
 			int srcCount = 0, destCount = 0;
 			SimpleDateFormat srcSF = new SimpleDateFormat("yyyyMMddHHmmss");
 			PreparedStatement destPS = destDAO.prepareStatement(destSQL.toString());
+			for (int i = 0; i < allTransfer.size(); i++) {
+				TransferBean transferBean = allTransfer.get(i);
+				if (!"".equals(transferBean.getSrcColumn()) && transferBean.getSrcContent() != null
+						&& !"".equals(transferBean.getSrcContent())) {
+					updateSrcSQL = updateSrcSQL + transferBean.getSrcColumn() + "='" + transferBean.getSrcContent()
+							+ "',";
+				}
+			}
 			while (srcRS.next()) {
+				String pk_key = null;
 				try {
 					srcCount++;
+					pk_key = srcRS.getString(Constans.pk_column);
 					int index = 1;
 					for (int i = 0; i < allTransfer.size(); i++) {
 						TransferBean transferBean = allTransfer.get(i);
@@ -198,9 +207,9 @@ public class TransferThread extends Thread {
 						}
 						// 寫固定值欄位
 						else if ("".equals(transferBean.getSrcColumn()) && !"".equals(transferBean.getDestColumn())) {
-							if("".equals(transferBean.getDestContent())) {
+							if ("".equals(transferBean.getDestContent())) {
 								destPS.setString(index++, " ");
-							}else {
+							} else {
 								destPS.setString(index++, transferBean.getDestContent());
 							}
 						} else if (!"".equals(transferBean.getSrcColumn()) && !"".equals(transferBean.getSrcContent())
@@ -208,16 +217,6 @@ public class TransferThread extends Thread {
 							// 來源需更新欄位
 						} else {
 						}
-						if (!updateSQLFinished) {
-							if (!"".equals(transferBean.getSrcColumn()) && transferBean.getSrcContent() != null
-									&& !"".equals(transferBean.getSrcContent())) {
-								updateSrcSQL = updateSrcSQL + transferBean.getSrcColumn() + "='"
-										+ transferBean.getSrcContent() + "',";
-							}
-						}
-					}
-					if (!updateSQLFinished) {
-						updateSQLFinished = true;
 					}
 					int resut = destPS.executeUpdate();
 					if (resut > 0) {
@@ -225,24 +224,35 @@ public class TransferThread extends Thread {
 						if (updateList == null) {
 							updateList = new ArrayList<String>();
 						}
-						updateList.add(srcRS.getString(Constans.pk_column));
+						updateList.add(pk_key);
 					}
 				} catch (SQLException e) {
+					addErrorMessage("寫入錯誤 來源資料庫 欄位"+Constans.pk_column+"="+pk_key);
 					logger.error("TransferThread Insert Error ", e);
 				} catch (Exception e) {
+					addErrorMessage("寫入錯誤 來源資料庫 欄位"+Constans.pk_column+"="+pk_key);
 					logger.error("TransferThread Insert Error ", e);
 				}
 			}
 			destPS.close();
-			addMessage("讀取來源資料庫 " + srcCount + " 筆，寫入目標資料庫成功 " + destCount + "，失敗 " + (srcCount - destCount) + " 筆");
+			addMessage("讀取來源資料庫 " + srcCount + " 筆，寫入目標資料庫成功 " + destCount + " 筆，失敗 " + (srcCount - destCount) + " 筆");
 			updateSrcSQL = updateSrcSQL.substring(0, updateSrcSQL.length() - 1) + " where " + Constans.pk_column + "=?";
 			PreparedStatement srcUpdatePS = srcDAO.prepareStatement(updateSrcSQL);
 			if (updateList != null) {
 				logger.info("updateSrcSQL=" + updateSrcSQL);
+				int updateCount = 0;
 				for (int i = 0; i < updateList.size(); i++) {
-					srcUpdatePS.setString(1, updateList.get(i));
-					srcUpdatePS.executeUpdate();
+					try {
+						srcUpdatePS.setString(1, updateList.get(i));
+						srcUpdatePS.executeUpdate();
+						updateCount++;
+					} catch (Exception e) {
+						addErrorMessage("更新來源資料庫，主鍵為 " + updateList.get(i) + " 更新發生異常");
+						logger.error("TransferThread Update Src Table Error ", e);
+					}
 				}
+				addMessage("更新來源資料庫欄位 " + destCount + "筆，更新資料庫成功：" + updateCount + " 筆，失敗：" + (destCount - updateCount)
+						+ "筆");
 			}
 			srcUpdatePS.close();
 			srcDAO.close();
@@ -273,6 +283,16 @@ public class TransferThread extends Thread {
 				textArea.setText("");
 			}
 			logger.info(message);
+			textArea.append(sf.format(new Date()) + " " + message + "\r\n");
+			textArea.setSelectionStart(textArea.getText().length());
+		}
+	}
+	public void addErrorMessage(String message) {
+		if (textArea != null) {
+			if (textArea.getLineCount() > 100) {
+				textArea.setText("");
+			}
+			logger.error(message);
 			textArea.append(sf.format(new Date()) + " " + message + "\r\n");
 			textArea.setSelectionStart(textArea.getText().length());
 		}

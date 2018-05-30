@@ -21,10 +21,19 @@ public class DAOSQL {
 			if (se.getErrorCode() == 17002) {
 				throw new Exception("DAOSQL.DAOSQL(): db 無法連線");
 			} else if (se.getErrorCode() == 12505) {
-				throw new Exception("資料庫不存在");
+				throw new Exception("Oracle 資料庫不存在");
 			} else if (se.getErrorCode() == 1017) {
 				throw new Exception("使用者名稱/使用者密碼驗證失敗");
-			} else {
+			} else if (se.getErrorCode() == 4060) {
+				throw new Exception("SQL Server 資料庫不存在");
+			}
+			else if (se.getErrorCode() == 18456) {
+				throw new Exception("SQL Server 登入失敗");
+			}
+			else if(se.getErrorCode()==0) {
+				throw new Exception("資料庫連線被中斷");
+			}
+			else {
 				logger.error("se errorCode="+se.getErrorCode());
 				throw new Exception("DAOSQL.DAOSQL():" + se);
 			}
@@ -43,10 +52,18 @@ public class DAOSQL {
 			if (se.getErrorCode() == 17002) {
 				throw new Exception("DAOSQL.DAOSQL(): db 無法連線");
 			} else if (se.getErrorCode() == 12505) {
-				throw new Exception("資料庫不存在");
+				throw new Exception("Oracle 資料庫不存在");
 			} else if (se.getErrorCode() == 1017) {
 				throw new Exception("使用者名稱/使用者密碼驗證失敗");
-			} else {
+			} else if (se.getErrorCode() == 4060) {
+				throw new Exception("SQL Server 資料庫不存在");
+			}
+			else if (se.getErrorCode() == 18456) {
+				throw new Exception("SQL Server 登入失敗");
+			}else if(se.getErrorCode()==0) {
+				throw new Exception("資料庫連線被中斷");
+			}
+			else {
 				logger.error("se errorCode="+se.getErrorCode());
 				throw new Exception("DAOSQL.DAOSQL():" + se);
 			}
