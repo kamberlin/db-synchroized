@@ -473,7 +473,7 @@ public class DataBasePanel extends JPanel {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(save()) {
+				if (save()) {
 					CommonUtil.reloadDB();
 					disableAll();
 				}
@@ -564,11 +564,12 @@ public class DataBasePanel extends JPanel {
 	}
 
 	public boolean save() {
-		boolean result=false;
+		boolean result = false;
 		SystemConfigUtil systemConfigUtil;
 		try {
-			if (!checkColumns()) {
-				JOptionPane.showMessageDialog(this, "資料庫設定欄位有空值", "資料庫設定資料驗證", JOptionPane.ERROR_MESSAGE);
+			String check = checkColumns();
+			if (!"".equals(check)) {
+				CommonUtil.showMessageDialog(this, check, "資料庫設定資料驗證", JOptionPane.ERROR_MESSAGE);
 			} else {
 				if (dbFile != null && dbFile.exists()) {
 					dbFile.delete();
@@ -596,7 +597,7 @@ public class DataBasePanel extends JPanel {
 
 				// 將檔案再加密
 				CommonUtil.encrypt(dbFile.getPath(), Constans.edit_pw);
-				result=true;
+				result = true;
 			}
 		} catch (Exception e) {
 			logger.error("DataBasePanel save error ", e);
@@ -605,9 +606,9 @@ public class DataBasePanel extends JPanel {
 	}
 
 	public void askSave() {
-		int answer = JOptionPane.showConfirmDialog(this, "尚未儲存設定，是否需要儲存", "儲存設定", JOptionPane.YES_NO_OPTION);
+		int answer = CommonUtil.askSave();
 		if (answer == JOptionPane.YES_OPTION) {
-			if(!save()) {
+			if (!save()) {
 				logger.info("資料庫設定 欄位設定有空值 無法存檔  載入前次設定");
 				setDefaultText();
 				disableAll();
@@ -626,49 +627,50 @@ public class DataBasePanel extends JPanel {
 		if ("資料庫連線成功".equals(msg)) {
 			msg = head + msg;
 			logger.info(msg);
-			JOptionPane.showMessageDialog(jpanel, msg, "資料庫連線測試", JOptionPane.INFORMATION_MESSAGE);
+			CommonUtil.showMessageDialog(jpanel, msg, "資料庫連線測試", JOptionPane.INFORMATION_MESSAGE);
 		} else {
 			msg = head + msg;
 			logger.error(msg);
-			JOptionPane.showMessageDialog(jpanel, msg, "資料庫連線測試", JOptionPane.ERROR_MESSAGE);
+			CommonUtil.showMessageDialog(jpanel, msg, "資料庫連線測試", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
-	public boolean checkColumns() {
-		boolean result = true;
+	public String checkColumns() {
+		StringBuilder sb = new StringBuilder();
 
-		if ("".equals((String) db_src_type.getSelectedItem())) {
-			return false;
-		}
 		if ("".equals(src_ip_text.getText())) {
-			return false;
+			sb.append("來源資料庫 伺服器名稱(IP) 未輸入，");
 		}
 		if ("".equals(src_username_text.getText())) {
-			return false;
+			sb.append("來源資料庫 登入帳號 未輸入，");
+		}
+		if ("".equals(String.valueOf(src_pw_text.getPassword()))) {
+			sb.append("來源資料庫 登入密碼 未輸入，");
 		}
 		if ("".equals(src_dbName_text.getText())) {
-			return false;
+			sb.append("來源資料庫 資料庫名稱 未輸入，");
 		}
 		if ("".equals(src_tableName_text.getText())) {
-			return false;
-		}
-		if ("".equals((String) db_dest_type.getSelectedItem())) {
-			return false;
+			sb.append("來源資料庫 資料表名稱 未輸入，");
 		}
 		if ("".equals(dest_ip_text.getText())) {
-			return false;
+			sb.append("目標資料庫 伺服器名稱(IP) 未輸入，");
 		}
 		if ("".equals(dest_username_text.getText())) {
-			return false;
+			sb.append("來源資料庫 登入帳號 未輸入，");
 		}
 		if ("".equals(String.valueOf(dest_pw_text.getPassword()))) {
-			return false;
+			sb.append("目標資料庫 登入密碼 未輸入，");
 		}
 		if ("".equals(dest_dbName_text.getText())) {
-			return false;
+			sb.append("目標資料庫 資料庫名稱 未輸入，");
 		}
 		if ("".equals(dest_tableName_text.getText())) {
-			return false;
+			sb.append("目標資料庫 資料表名稱 未輸入，");
+		}
+		String result = sb.toString();
+		if (result != null && !"".equals(result)) {
+			result = result.substring(0, result.length() - 1);
 		}
 		return result;
 	}

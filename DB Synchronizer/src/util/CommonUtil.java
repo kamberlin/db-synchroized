@@ -1,5 +1,6 @@
 package util;
 
+import java.awt.Component;
 import java.awt.GridLayout;
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,8 +11,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 
@@ -164,6 +163,7 @@ public class CommonUtil {
 		JPanel password_panel = new JPanel(new GridLayout(2, 1));
 		 JPasswordField pwd = new JPasswordField(10);
 		 JLabel label = new JLabel("請輸入修改密碼");
+		 label.setFont(Constans.textFont);
 		 password_panel.add(label);
 		 password_panel.add(pwd);
         int action = JOptionPane.showConfirmDialog(null, password_panel,"密碼驗證",JOptionPane.OK_CANCEL_OPTION);
@@ -172,7 +172,7 @@ public class CommonUtil {
 			if (Constans.edit_pw.equals(password)) {
 				result = true;
 			} else {
-				JOptionPane.showMessageDialog(panel, "密碼輸入錯誤，請重新輸入!!", "驗證失敗", JOptionPane.ERROR_MESSAGE);
+				showMessageDialog(panel, "密碼輸入錯誤，請重新輸入!!", "驗證失敗", JOptionPane.ERROR_MESSAGE);
 			}
         }
 		return result;
@@ -316,5 +316,16 @@ public class CommonUtil {
 		} catch (Exception e) {
 			logger.error("CommonUtil reload error", e);
 		}
+	}
+	public static void showMessageDialog(Component parentComponent, String message, String title, int messageType) {
+		JLabel textLabel=new JLabel(message);
+		textLabel.setFont(Constans.textFont);
+		JOptionPane.showMessageDialog(parentComponent, textLabel, title, messageType);
+	}
+	public static int askSave() {
+		JLabel textLabel=new JLabel("尚未儲存設定，是否需要儲存");
+		textLabel.setFont(Constans.textFont);
+		int answer = JOptionPane.showConfirmDialog(null, textLabel, "儲存設定", JOptionPane.YES_NO_OPTION);
+		return answer;
 	}
 }

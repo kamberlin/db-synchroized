@@ -145,8 +145,9 @@ public class ConditionPanel extends JPanel {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				 save();
-				 disableAll();
+				 if(save()) {
+					 disableAll();
+				 }
 			}
 		});
 
@@ -171,27 +172,35 @@ public class ConditionPanel extends JPanel {
 		disableAll();
 	}
 
-	public void save() {
+	public boolean save() {
+		boolean result=false;
 		try {
-			if(conditionFile!=null && conditionFile.exists()) {
-				conditionFile.delete();
+			String check=checkColumns();
+			if(!"".equals(check)) {
+				CommonUtil.showMessageDialog(this, check, "欄位驗證錯誤", JOptionPane.ERROR_MESSAGE);
 			}else {
-				conditionFile=new File(Constans.conditionPath);
+				if(conditionFile!=null && conditionFile.exists()) {
+					conditionFile.delete();
+				}else {
+					conditionFile=new File(Constans.conditionPath);
+				}
+				conditionFile.getParentFile().mkdirs();
+				conditionFile.createNewFile();
+				SystemConfigUtil systemConfigUtil = new SystemConfigUtil(conditionFile);
+				
+				systemConfigUtil.saveCondition("sequence", sequence_text.getText());
+				systemConfigUtil.saveCondition("condition", condition_text.getText());
+				systemConfigUtil.saveCondition("condition_column", (String) condition_columns.getSelectedItem());
+				systemConfigUtil.saveCondition("pk_column", (String) pk_columns.getSelectedItem());
+				
+				//將檔案再加密
+				CommonUtil.encrypt(conditionFile.getPath(), Constans.edit_pw);
+				result=true;
 			}
-			conditionFile.getParentFile().mkdirs();
-			conditionFile.createNewFile();
-			SystemConfigUtil systemConfigUtil = new SystemConfigUtil(conditionFile);
-			
-			systemConfigUtil.saveCondition("sequence", sequence_text.getText());
-			systemConfigUtil.saveCondition("condition", condition_text.getText());
-			systemConfigUtil.saveCondition("condition_column", (String) condition_columns.getSelectedItem());
-			systemConfigUtil.saveCondition("pk_column", (String) pk_columns.getSelectedItem());
-			
-			//將檔案再加密
-			CommonUtil.encrypt(conditionFile.getPath(), Constans.edit_pw);
 		} catch (Exception e) {
 			logger.error("ConditionPanel save()", e);
 		}
+		return result;
 	}
 
 	public void disableAll() {
@@ -224,15 +233,17 @@ public class ConditionPanel extends JPanel {
 	}
 
 	public void askSave() {
-		int answer = JOptionPane.showConfirmDialog(this, "尚未儲存設定，是否需要儲存", "儲存設定", JOptionPane.YES_NO_OPTION);
+		int answer = CommonUtil.askSave();
 		if (answer == JOptionPane.YES_OPTION) {
-			save();
+			if(!save()) {
+			logger.info("條件判斷 存檔異常");
+			}
 		}else {
-			isEdit=false;
 			logger.info("執行條件 不需存檔  設定為不可編輯");
-			setDefaultText();
-			disableAll();
 		}
+		setDefaultText();
+		disableAll();
+		isEdit=false;
 	}
 
 	public void loadColumn() {
@@ -247,7 +258,7 @@ public class ConditionPanel extends JPanel {
 				}
 			}
 		}else {
-			JOptionPane.showMessageDialog(this, "來源資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
+			CommonUtil.showMessageDialog(this, "來源資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
 
 		}
 	}
@@ -259,8 +270,32 @@ public class ConditionPanel extends JPanel {
 		condition_text.setText(Constans.condition);
 	}
 
-	public void readFromFile() {
-
+	public String checkColumns() {
+		String result="";
+		if("".equals(sequence_text.getText())) {
+			return "間隔頻率 未輸入";
+		}else {
+			try {
+			int sequence=Integer.parseInt(sequence_text.getText());
+			if(sequence<30) {
+				logger.error("間隔頻率 不得小於30秒");
+				return "間隔頻率 不得小於30秒";
+			}
+			}catch(NumberFormatException e) {
+				logger.error("間隔頻率 輸入非數字 ");
+				return "間隔頻率 輸入非數字";
+			}
+		}
+		if("".equals(condition_text.getText())) {
+			return "來源判斷條件未輸入";
+		}
+		if("".equals((String) condition_columns.getSelectedItem())) {
+			return "來源判斷欄位未選擇";
+		}
+		if("".equals((String) pk_columns.getSelectedItem())) {
+			return "主鍵欄位未選擇";
+		}
+		return result;
 	}
 
 }

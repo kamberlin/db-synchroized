@@ -197,11 +197,11 @@ public class ColumnSettingPanel extends JPanel {
 		if (DBUtil.checkAllNotEmpty(Constans.destDBInfo)) {
 			DBUtil.getDestColumnsFromDB();
 			if (Constans.destColumns == null || Constans.destColumns.size() == 0) {
-				JOptionPane.showMessageDialog(this, "目標資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
+				CommonUtil.showMessageDialog(this, "目標資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
 				logger.info("目標資料庫設定不正確，請檢查資料庫設定");
 			}
 		} else {
-			JOptionPane.showMessageDialog(this, "目標資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
+			CommonUtil.showMessageDialog(this, "目標資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
 			logger.info("目標資料庫設定不正確，請檢查資料庫設定");
 		}
 		return result;
@@ -211,11 +211,11 @@ public class ColumnSettingPanel extends JPanel {
 		if (DBUtil.checkAllNotEmpty(Constans.srcDBInfo)) {
 			DBUtil.getSrcColumnsFromDB();
 			if (Constans.srcColumns == null || Constans.srcColumns.size() == 0) {
-				JOptionPane.showMessageDialog(this, "來源資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
+				CommonUtil.showMessageDialog(this, "來源資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
 				logger.info("來源資料庫設定不正確，請檢查資料庫設定");
 			}
 		} else {
-			JOptionPane.showMessageDialog(this, "來源資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
+			CommonUtil.showMessageDialog(this, "來源資料庫設定不正確，請檢查資料庫設定", "資料庫連線異常", JOptionPane.ERROR_MESSAGE);
 			logger.info("來源資料庫設定不正確，請檢查資料庫設定");
 		}
 		return result;
@@ -498,7 +498,7 @@ public class ColumnSettingPanel extends JPanel {
 	}
 
 	public void askSave() {
-		int answer = JOptionPane.showConfirmDialog(this, "尚未儲存設定，是否需要儲存", "儲存設定", JOptionPane.YES_NO_OPTION);
+		int answer = CommonUtil.askSave();
 		if (answer == JOptionPane.YES_OPTION) {
 			save();
 		} else {
