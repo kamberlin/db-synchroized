@@ -4,10 +4,13 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -18,6 +21,14 @@ import util.Logger;
 
 import javax.swing.JTabbedPane;
 import java.awt.Font;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.ContainerEvent;
+import java.awt.event.ContainerListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
@@ -28,7 +39,8 @@ public class MainFrame extends JFrame {
 	 */
 	private static final long serialVersionUID = 8720432252745326845L;
 	private static Logger logger =null;
-	private JPanel contentPane;
+	private JPanel contentPane=null;
+	private static ExecutePanel execute_panel=null;
 	private int selected=0;
 	/**
 	 * Launch the application.
@@ -47,6 +59,9 @@ public class MainFrame extends JFrame {
 					MainFrame frame = new MainFrame();
 					frame.setVisible(true);
 					logger.info("db Synchronizer 啟動");
+					if(execute_panel!=null) {
+						execute_panel.prepareRun();
+					}
 					frame.addWindowListener(new WindowListener() {
 						
 						@Override
@@ -117,7 +132,7 @@ public class MainFrame extends JFrame {
 		tabbedPane.setFont(new Font("微軟正黑體", Font.PLAIN, 24));
 		contentPane.add(tabbedPane, BorderLayout.NORTH);
 		
-		ExecutePanel execute_panel = new ExecutePanel();
+		execute_panel = new ExecutePanel();
 		tabbedPane.addTab("服務歷程", null, execute_panel, null);
 		
 		DataBasePanel db_panel = new DataBasePanel();
@@ -175,6 +190,19 @@ public class MainFrame extends JFrame {
 					timeSettingPanel.loadAllData();
 					timeSettingPanel.checkPassword();
 				}
+			}
+		});
+
+		execute_panel.addContainerListener(new ContainerListener() {
+			
+			@Override
+			public void componentRemoved(ContainerEvent e) {
+				
+			}
+			
+			@Override
+			public void componentAdded(ContainerEvent e) {
+				
 			}
 		});
 	}

@@ -32,12 +32,12 @@ public class TransferThread extends Thread {
 		super();
 		this.textArea = textArea;
 		this.statusTextLabel = statusTextLabel;
-		addMessage("啟動服務");
 	}
 
 	@Override
 	public void run() {
 		super.run();
+		addMessage("啟動服務");
 		while (running) {
 			try {
 				CommonUtil.reloadDB();
@@ -134,7 +134,7 @@ public class TransferThread extends Thread {
 
 			srcSQL.append(
 					" from " + Constans.srcDBInfo.getTableName() + " where " + Constans.condition_column + " = ?");
-			logger.info("srcSQL=" + srcSQL.toString());
+			logger.info("srcSQL=" + srcSQL.toString()+" "+Constans.condition);
 			logger.info("destSQL=" + destSQL.toString());
 
 			PreparedStatement srcPS = srcDAO.prepareStatement(srcSQL.toString());
@@ -153,6 +153,8 @@ public class TransferThread extends Thread {
 							+ "',";
 				}
 			}
+			srcPS.setString(1, Constans.condition);
+			srcRS=srcPS.executeQuery();
 			while (srcRS.next()) {
 				String pk_key = null;
 				try {
@@ -227,10 +229,10 @@ public class TransferThread extends Thread {
 						updateList.add(pk_key);
 					}
 				} catch (SQLException e) {
-					addErrorMessage("寫入錯誤 來源資料庫 欄位"+Constans.pk_column+"="+pk_key);
+					addMessage("寫入錯誤 來源資料庫 欄位"+Constans.pk_column+"="+pk_key);
 					logger.error("TransferThread Insert Error ", e);
 				} catch (Exception e) {
-					addErrorMessage("寫入錯誤 來源資料庫 欄位"+Constans.pk_column+"="+pk_key);
+					addMessage("寫入錯誤 來源資料庫 欄位"+Constans.pk_column+"="+pk_key);
 					logger.error("TransferThread Insert Error ", e);
 				}
 			}
@@ -247,12 +249,12 @@ public class TransferThread extends Thread {
 						srcUpdatePS.executeUpdate();
 						updateCount++;
 					} catch (Exception e) {
-						addErrorMessage("更新來源資料庫，主鍵為 " + updateList.get(i) + " 更新發生異常");
+						addMessage("更新來源資料庫，主鍵為 " + updateList.get(i) + " 更新發生異常");
 						logger.error("TransferThread Update Src Table Error ", e);
 					}
 				}
-				addMessage("更新來源資料庫欄位 " + destCount + "筆，更新資料庫成功：" + updateCount + " 筆，失敗：" + (destCount - updateCount)
-						+ "筆");
+				addMessage("更新來源資料庫欄位 " + destCount + " 筆，更新資料庫成功 " + updateCount + " 筆，失敗" + (destCount - updateCount)
+						+ " 筆");
 			}
 			srcUpdatePS.close();
 			srcDAO.close();

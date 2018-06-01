@@ -10,13 +10,22 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.TitledBorder;
+
 import layout.TableLayout;
 import util.Constans;
+import util.LogManager;
+import util.Logger;
 import util.TransferThread;
 
 public class ExecutePanel extends JPanel {
 	TransferThread transferThread = null;
-
+	Logger logger = LogManager.getLogger(ExecutePanel.class);
+	boolean prepare = true;
+	
+	JButton startBtn=null;
+	JButton stopBtn=null;
+	JTextArea textArea = null;
+	JLabel statusTextLabel = null;
 	/**
 	 * 
 	 */
@@ -39,11 +48,11 @@ public class ExecutePanel extends JPanel {
 		upPanel.setBorder(tb);
 		JLabel statusTitleLabel = new JLabel("服務狀態:");
 		statusTitleLabel.setFont(Constans.titleFont);
-		JLabel statusTextLabel = new JLabel("服務執行中!");
+		statusTextLabel = new JLabel("服務執行中!");
 		statusTextLabel.setFont(Constans.titleFont);
-		JButton startBtn = new JButton("啟動服務");
+		startBtn = new JButton("啟動服務");
 		startBtn.setFont(Constans.titleFont);
-		JButton stopBtn = new JButton("停止服務");
+		stopBtn = new JButton("停止服務");
 		stopBtn.setFont(Constans.titleFont);
 		upPanel.add(statusTitleLabel, "0,0");
 		upPanel.add(statusTextLabel, "1,0");
@@ -51,7 +60,7 @@ public class ExecutePanel extends JPanel {
 		upPanel.add(stopBtn, "3,0");
 		JPanel downPanel = new JPanel();
 		downPanel.setLayout(new GridLayout());
-		JTextArea textArea = new JTextArea();
+		textArea = new JTextArea();
 		textArea.setFont(Constans.textFont);
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setPreferredSize(new Dimension(400, 300));
@@ -69,7 +78,9 @@ public class ExecutePanel extends JPanel {
 				stopBtn.setEnabled(true);
 				startBtn.setEnabled(false);
 				statusTextLabel.setText("服務執行中!");
-				transferThread = new TransferThread(textArea, statusTextLabel);
+				if (transferThread == null) {
+					transferThread = new TransferThread(textArea, statusTextLabel);
+				}
 				transferThread.start();
 			}
 		});
@@ -82,9 +93,40 @@ public class ExecutePanel extends JPanel {
 				startBtn.setEnabled(true);
 				statusTextLabel.setText("服務停止!");
 				transferThread.setRunning(false);
+				transferThread=null;
+				prepare = false;
 			}
 		});
 
 	}
 
+	public void prepareRun() {
+		new Thread() {
+			public void run() {
+				int countdown = 60;
+				try {
+					int count = 0;
+					if(prepare) {
+						statusTextLabel.setText("服務即將執行中!");
+						stopBtn.setEnabled(true);
+						startBtn.setEnabled(false);
+					}
+					while (prepare) {
+						if (transferThread == null) {
+							transferThread = new TransferThread(textArea, statusTextLabel);
+						}
+						transferThread.addMessage("倒數" + (countdown - count) + "秒後自動執行");
+						count=count+5;
+						Thread.sleep(5000);
+						if (count >= countdown) {
+							prepare = false;
+							transferThread.start();
+						}
+					}
+				} catch (Exception e) {
+					logger.error("ExecutePanel prepare run ", e);
+				}
+			}
+		}.start();
+	}
 }
