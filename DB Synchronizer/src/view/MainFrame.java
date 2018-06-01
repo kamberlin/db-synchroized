@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -57,6 +59,9 @@ public class MainFrame extends JFrame {
 					CommonUtil.init();
 					logger= LogManager.getLogger(MainFrame.class);
 					MainFrame frame = new MainFrame();
+					System.out.println("logopath="+Constans.logopath);
+					ImageIcon imageIcon=new ImageIcon(Constans.logopath);
+					frame.setIconImage(imageIcon.getImage());
 					frame.setVisible(true);
 					logger.info("db Synchronizer 啟動");
 					if(execute_panel!=null) {

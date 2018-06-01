@@ -254,6 +254,7 @@ public class CommonUtil {
 			Constans.timeDownPath = Constans.rootPath + File.separator + "data" + File.separator + "timeDown.bin";
 			Constans.columnSettingPath = Constans.rootPath + File.separator + "data" + File.separator
 					+ "column_setting.bin";
+			Constans.logopath=Constans.rootPath+File.separator+"icon.png";
 			//重新載入db設定
 			reloadDB();
 			

@@ -13,6 +13,7 @@ public class Constans {
 	public static DestDBInfo destDBInfo=null;
 	public static String rootPath=null;
 	public static String dbproperty=null;
+	public static String logopath=null;
 	public static String logproperty=null;
 	public static String pk_column=null;
 	public static String sequence_s="30";
